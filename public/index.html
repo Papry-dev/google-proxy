@@ -111,7 +111,7 @@
   <button id="submitOrder">Оформить заказ</button>
 
   <script>
-    let map, marker, coords;
+    let map, marker, coords, cartValue = 0;
 
     function initMap() {
       const tbilisi = { lat: 41.7151, lng: 44.8271 };
@@ -120,16 +120,12 @@
         zoom: 13
       });
 
-      marker = new google.maps.Marker({
-        position: tbilisi,
-        map,
-        draggable: true,
-      });
-
+      marker = new google.maps.Marker({ position: tbilisi, map, draggable: true });
       coords = tbilisi;
 
       marker.addListener("dragend", () => {
         coords = marker.getPosition().toJSON();
+        calculateDeliveryCost();
       });
 
       const input = document.getElementById("addressInput");
@@ -143,6 +139,7 @@
         map.setCenter(place.geometry.location);
         marker.setPosition(place.geometry.location);
         coords = place.geometry.location.toJSON();
+        calculateDeliveryCost();
       });
 
       navigator.geolocation.getCurrentPosition(pos => {
@@ -151,6 +148,7 @@
         map.setCenter(current);
         marker.setPosition(current);
         coords = current;
+        calculateDeliveryCost();
       });
     }
 
@@ -161,7 +159,6 @@
       const slotSelect = document.getElementById("deliverySlot");
 
       const deliveryDays = [];
-
       for (let d = 0; d < 14; d++) {
         const day = new Date(now);
         day.setDate(now.getDate() + d);
@@ -176,10 +173,8 @@
       const generateSlotsForDay = (dayIndex) => {
         const selectedDay = deliveryDays[dayIndex].date;
         const nowTime = new Date();
-
         let start = new Date(selectedDay);
         if (dayIndex === 0) {
-          // сегодня: старт с текущего времени + 1.5 ч, округление
           start.setHours(nowTime.getHours(), nowTime.getMinutes() + 90, 0, 0);
           const m = start.getMinutes();
           start.setMinutes(m <= 30 ? 30 : 60, 0, 0);
@@ -200,41 +195,54 @@
         }
 
         slotSelect.innerHTML = slots.map(s => `<option value="${s}">${s}</option>`).join('');
+        calculateDeliveryCost();
       };
 
-      dateSelect.addEventListener("change", e => {
-        generateSlotsForDay(parseInt(e.target.value));
+      dateSelect.addEventListener("change", e => generateSlotsForDay(parseInt(e.target.value)));
+      slotSelect.addEventListener("change", calculateDeliveryCost);
+      generateSlotsForDay(0);
+    }
+
+    async function calculateDeliveryCost() {
+      const dayLabel = document.getElementById("deliveryDate").selectedOptions[0]?.textContent;
+      const timeSlot = document.getElementById("deliverySlot").value;
+      const time = `${dayLabel}, ${timeSlot}`;
+      if (!coords || !time) return;
+
+      const response = await fetch("https://google-proxy.onrender.com/render", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time, cart: cartValue })
       });
 
-      generateSlotsForDay(0); // по умолчанию сегодня
+      const data = await response.json();
+      if (!data || data.deliveryCost === undefined) return;
+      const delivery = parseFloat(data.deliveryCost);
+      document.getElementById("deliveryCost").value = `${delivery.toFixed(2)} ₾`;
+      const total = delivery + cartValue;
+      document.getElementById("totalCost").value = `${total.toFixed(2)} ₾`;
     }
 
     window.onload = () => {
       generateDeliveryOptions();
       const cartRaw = document.getElementById("cart_amount")?.innerText || "26,10₾";
-      const cartValue = parseFloat(cartRaw.replace(/[₾,]/g, '.')) || 0;
+      cartValue = parseFloat(cartRaw.replace(/[₾,]/g, '.')) || 0;
       document.getElementById("cartValue").value = `${cartValue.toFixed(2)} ₾`;
 
       document.getElementById("submitOrder").onclick = async () => {
         const dayLabel = document.getElementById("deliveryDate").selectedOptions[0].textContent;
         const timeSlot = document.getElementById("deliverySlot").value;
         const time = `${dayLabel}, ${timeSlot}`;
-
         if (!coords || !time) return alert("Укажите адрес и время доставки");
 
-        const response = await fetch("https://yandex-google-proxy.onrender.com/render", {
+        const response = await fetch("https://google-proxy.onrender.com/render", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lat: coords.lat,
-            lon: coords.lng,
-            time,
-            cart: cartValue,
-          })
+          body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time, cart: cartValue })
         });
 
         const data = await response.json();
-        if (!data || !data.deliveryCost) return alert("Ошибка расчёта доставки");
+        if (!data || data.deliveryCost === undefined) return alert("Ошибка расчёта доставки");
 
         const delivery = parseFloat(data.deliveryCost);
         document.getElementById("deliveryCost").value = `${delivery.toFixed(2)} ₾`;
