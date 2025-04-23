@@ -209,7 +209,7 @@
       const time = `${dayLabel}, ${timeSlot}`;
       if (!coords || !time) return;
 
-      const response = await fetch("https://google-proxy.onrender.com/render", {
+      const response = await fetch("https://proxy-server-zhn1.onrender.com/render", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time, cart: cartValue })
@@ -235,7 +235,7 @@
         const time = `${dayLabel}, ${timeSlot}`;
         if (!coords || !time) return alert("Укажите адрес и время доставки");
 
-        const response = await fetch("https://google-proxy.onrender.com/render", {
+        const response = await fetch("https://proxy-server-zhn1.onrender.com/render", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time, cart: cartValue })
