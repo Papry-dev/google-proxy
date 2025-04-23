@@ -1,5 +1,3 @@
-// Полный исправленный index.html со всеми рабочими блоками и восстановленными датами и временем
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -137,7 +135,8 @@
           if (status === "OK" && results[0]) {
             const addressParts = results[0].formatted_address.split(",");
             const street = addressParts[0].trim();
-            const city = addressParts.slice(1).join(",").trim();
+            const cityParts = addressParts.slice(1).map(p => p.trim()).filter(p => !p.toLowerCase().includes("грузия"));
+            const city = cityParts.join(", ");
             document.getElementById("addressInput").value = street;
             document.getElementById("addressCity").innerText = city;
           }
@@ -149,7 +148,7 @@
       const input = document.getElementById("addressInput");
       const autocomplete = new google.maps.places.Autocomplete(input);
       autocomplete.bindTo("bounds", map);
-      autocomplete.setFields(["geometry"]);
+      autocomplete.setFields(["geometry", "formatted_address"]);
 
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
@@ -161,7 +160,8 @@
 
         const addressParts = place.formatted_address.split(",");
         const street = addressParts[0].trim();
-        const city = addressParts.slice(1).join(",").trim();
+        const cityParts = addressParts.slice(1).map(p => p.trim()).filter(p => !p.toLowerCase().includes("грузия"));
+        const city = cityParts.join(", ");
         document.getElementById("addressInput").value = street;
         document.getElementById("addressCity").innerText = city;
 
@@ -226,18 +226,23 @@
       const time = `${dayLabel}, ${timeSlot}`;
       if (!coords || !time || !addressSelected) return;
 
-      const response = await fetch("https://proxy-server-zhn1.onrender.com/render", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time, cart: cartValue })
-      });
+      try {
+        const response = await fetch("https://proxy-server-zhn1.onrender.com/render", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time, cart: cartValue })
+        });
 
-      const data = await response.json();
-      if (!data || data.deliveryCost === undefined) return;
-      const delivery = parseFloat(data.deliveryCost);
-      document.getElementById("deliveryCost").value = `${delivery.toFixed(2)} ₾`;
-      const total = delivery + cartValue;
-      document.getElementById("totalCost").value = `${total.toFixed(2)} ₾`;
+        const data = await response.json();
+        if (!data || data.deliveryCost === undefined) return;
+
+        const delivery = parseFloat(data.deliveryCost);
+        document.getElementById("deliveryCost").value = `${delivery.toFixed(2)} ₾`;
+        const total = delivery + cartValue;
+        document.getElementById("totalCost").value = `${total.toFixed(2)} ₾`;
+      } catch (err) {
+        console.error("Ошибка расчёта доставки:", err);
+      }
     }
 
     window.onload = () => {
