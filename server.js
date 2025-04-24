@@ -27,3 +27,7 @@ app.get("/fetch", async (req, res) => {
     res.status(500).json({ error: "Fetch failed", details: e.message });
   }
 });
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
+});
