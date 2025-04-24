@@ -1,4 +1,4 @@
-// embed.js — полная замена оформления заказа в Telegram WebApp
+// embed.js — полная замена оформления заказа с картой, адресом и расчётом доставки
 
 (function () {
   const cartRaw = document.getElementById("cart_amount")?.innerText || "26,10₾";
@@ -28,7 +28,7 @@
       margin-top: 2rem; font-size: 1rem;
     }
     #map {
-      height: 200px; margin-top: 0.5rem; border-radius: 10px;
+      height: 300px; max-height: 50vh; margin-top: 0.5rem; border-radius: 10px;
     }
     .readonly {
       background-color: #2a2a2a; color: #ccc;
@@ -126,7 +126,7 @@
     const input = document.getElementById("deliveryAddress");
     const autocomplete = new google.maps.places.Autocomplete(input);
     autocomplete.bindTo("bounds", map);
-    autocomplete.setFields(["geometry"]);
+    autocomplete.setFields(["geometry", "formatted_address"]);
 
     autocomplete.addListener("place_changed", () => {
       const place = autocomplete.getPlace();
@@ -134,6 +134,7 @@
       map.setCenter(place.geometry.location);
       marker.setPosition(place.geometry.location);
       coords = place.geometry.location.toJSON();
+      input.value = place.formatted_address || ""; // 👈 вставляем адрес в поле
       addressSelected = true;
       calculateDelivery();
     });
