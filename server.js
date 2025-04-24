@@ -1,5 +1,3 @@
-// server.js — с прокси для Google Places API
-
 const express = require("express");
 const path = require("path");
 
@@ -9,12 +7,12 @@ const PORT = process.env.PORT || 10000;
 app.use(express.json());
 app.use(express.static("public"));
 
-// Твоя точка расчёта стоимости (уже есть, пусть останется)
+// Точка расчёта доставки (оставь как есть)
 app.post("/render", async (req, res) => {
-  // ...твой код доставки...
+  // ...твой код...
 });
 
-// ⚡ Новый прокси endpoint для Google API
+// Прокси к Google Places API
 app.get("/fetch", async (req, res) => {
   const target = req.query.q;
   if (!target || !target.startsWith("https://maps.googleapis.com")) {
@@ -31,7 +29,6 @@ app.get("/fetch", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
 });
