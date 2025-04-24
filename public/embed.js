@@ -1,6 +1,8 @@
-// embed.js — обновлён для автозаполнения адреса и обратного геокодирования
+// embed.js — отладочная версия с логами для Telegram WebApp
 
 (function () {
+  console.log("📦 embed.js загружен");
+
   const cartRaw = document.getElementById("cart_amount")?.innerText || "26,10₾";
   const cartValue = parseFloat(cartRaw.replace(/[₾,]/g, '.')) || 0;
   let coords = null;
@@ -44,64 +46,11 @@
   container.innerHTML = `
     <h1>Оформление заказа</h1>
 
-    <label>Дата доставки <span class="required-note">* (необходимое поле)</span>
-      <select id="deliveryDate" required></select>
-    </label>
-
-    <label>Время доставки <span class="required-note">* (необходимое поле)</span>
-      <select id="deliverySlot" required></select>
-    </label>
-
     <label>Адрес доставки <span class="required-note">* (необходимое поле)</span>
       <input type="text" id="deliveryAddress" placeholder="Введите адрес" required />
     </label>
 
     <div id="map"></div>
-
-    <label>Стоимость товаров
-      <input type="text" id="cartValue" class="readonly" readonly value="${cartValue.toFixed(2)} ₾" />
-    </label>
-
-    <label>Стоимость доставки
-      <input type="text" id="deliveryCost" class="readonly" readonly />
-    </label>
-
-    <label>Итого к оплате
-      <input type="text" id="totalCost" class="readonly" readonly />
-    </label>
-
-    <label>Номер телефона <span class="required-note">* (необходимое поле)</span>
-      <input type="tel" id="phone" required />
-    </label>
-
-    <label>Способ оплаты <span class="required-note">* (необходимое поле)</span>
-      <select id="paymentMethod" required>
-        <option value="payze">Онлайн оплата</option>
-        <option value="manual">Перевод</option>
-      </select>
-    </label>
-
-    <label>№ входа / подъезда
-      <input type="text" id="entrance" />
-    </label>
-
-    <label>Этаж
-      <input type="text" id="floor" />
-    </label>
-
-    <label>Квартира
-      <input type="text" id="apartment" />
-    </label>
-
-    <label>Код домофона
-      <input type="text" id="intercom" />
-    </label>
-
-    <label>Код лифта
-      <input type="text" id="elevator" />
-    </label>
-
-    <button id="submitOrder">Оформить заказ</button>
   `;
   document.getElementById("delivery-block")?.appendChild(container);
 
@@ -111,6 +60,8 @@
   document.body.appendChild(script);
 
   window.initDeliveryMap = () => {
+    console.log("🗺️ initDeliveryMap вызван");
+
     const tbilisi = { lat: 41.7151, lng: 44.8271 };
     const map = new google.maps.Map(document.getElementById("map"), {
       center: tbilisi,
@@ -123,40 +74,24 @@
       draggable: true,
     });
 
-    const geocoder = new google.maps.Geocoder();
-
     const input = document.getElementById("deliveryAddress");
-    const autocomplete = new google.maps.places.Autocomplete(input, {
-      types: ["geocode"],
-      componentRestrictions: { country: "ge" }
-    });
-    autocomplete.bindTo("bounds", map);
+    const autocomplete = new google.maps.places.Autocomplete(input);
     autocomplete.setFields(["geometry", "formatted_address", "name"]);
 
     autocomplete.addListener("place_changed", () => {
+      console.log("📍 place_changed событие сработало");
       const place = autocomplete.getPlace();
       if (!place.geometry) return;
       map.setCenter(place.geometry.location);
       marker.setPosition(place.geometry.location);
       coords = place.geometry.location.toJSON();
       input.value = place.formatted_address || place.name || place.vicinity || "";
-      addressSelected = true;
-      calculateDelivery();
+      console.log("📝 Вставлен адрес:", input.value);
     });
 
     marker.addListener("dragend", () => {
       coords = marker.getPosition().toJSON();
-      geocoder.geocode({ location: coords }, (results, status) => {
-        if (status === "OK" && results[0]) {
-          input.value = results[0].formatted_address || "";
-        }
-      });
-      addressSelected = true;
-      calculateDelivery();
+      console.log("📦 Маркер перемещён. Координаты:", coords);
     });
-
-    generateDeliveryOptions();
   };
-
-  // ... остальной код без изменений ...
 })();
