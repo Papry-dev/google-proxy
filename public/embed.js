@@ -110,19 +110,64 @@
     const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
 
     const input = document.getElementById("deliveryAddress");
-    const autocomplete = new google.maps.places.Autocomplete(input);
-    autocomplete.bindTo("bounds", map);
-    autocomplete.setFields(["geometry"]);
+    const suggestionBox = document.createElement("div");
+    suggestionBox.id = "suggestionBox";
+    suggestionBox.style.position = "absolute";
+    suggestionBox.style.background = "#333";
+    suggestionBox.style.zIndex = 1000;
+    suggestionBox.style.width = "100%";
+    suggestionBox.style.borderRadius = "0 0 6px 6px";
+    suggestionBox.style.boxShadow = "0 4px 6px rgba(0,0,0,0.3)";
+    suggestionBox.style.maxHeight = "200px";
+    suggestionBox.style.overflowY = "auto";
+    suggestionBox.style.display = "none";
+    input.parentElement.appendChild(suggestionBox);
 
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      if (!place.geometry) return;
-      const loc = place.geometry.location;
-      marker.setPosition(loc);
-      map.setCenter(loc);
-      coords = loc.toJSON();
-      input.value = place.formatted_address || place.name;
-      calcCost();
+    let timeout;
+    input.addEventListener("input", () => {
+      clearTimeout(timeout);
+      const query = input.value.trim();
+      if (query.length < 3) return suggestionBox.style.display = "none";
+
+      timeout = setTimeout(async () => {
+        const url = `/fetch?q=${encodeURIComponent(
+          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`
+        )}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        suggestionBox.innerHTML = "";
+        if (data.predictions && data.predictions.length) {
+          data.predictions.forEach(p => {
+            const div = document.createElement("div");
+            div.textContent = p.description;
+            div.style.padding = "0.5rem";
+            div.style.cursor = "pointer";
+            div.onmouseenter = () => div.style.background = "#444";
+            div.onmouseleave = () => div.style.background = "#333";
+            div.onclick = async () => {
+              input.value = p.description;
+              suggestionBox.style.display = "none";
+              const detailsUrl = `/fetch?q=${encodeURIComponent(
+                `https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`
+              )}`;
+              const res2 = await fetch(detailsUrl);
+              const data2 = await res2.json();
+              if (data2.result?.geometry?.location) {
+                const { lat, lng } = data2.result.geometry.location;
+                coords = { lat, lng };
+                const loc = new google.maps.LatLng(lat, lng);
+                marker.setPosition(loc);
+                map.setCenter(loc);
+                calcCost();
+              }
+            };
+            suggestionBox.appendChild(div);
+          });
+          suggestionBox.style.display = "block";
+        } else {
+          suggestionBox.style.display = "none";
+        }
+      }, 400);
     });
 
     marker.addListener("dragend", () => {
