@@ -121,6 +121,7 @@
       marker.setPosition(loc);
       map.setCenter(loc);
       coords = loc.toJSON();
+      input.value = place.formatted_address || place.name;
       calcCost();
     });
 
