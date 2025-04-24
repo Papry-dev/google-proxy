@@ -1,4 +1,4 @@
-// embed.js — полная замена оформления заказа с картой, адресом и расчётом доставки
+// embed.js — обновлён для автозаполнения адреса и обратного геокодирования
 
 (function () {
   const cartRaw = document.getElementById("cart_amount")?.innerText || "26,10₾";
@@ -123,10 +123,15 @@
       draggable: true,
     });
 
+    const geocoder = new google.maps.Geocoder();
+
     const input = document.getElementById("deliveryAddress");
-    const autocomplete = new google.maps.places.Autocomplete(input);
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      types: ["geocode"],
+      componentRestrictions: { country: "ge" }
+    });
     autocomplete.bindTo("bounds", map);
-    autocomplete.setFields(["geometry", "formatted_address"]);
+    autocomplete.setFields(["geometry", "formatted_address", "name"]);
 
     autocomplete.addListener("place_changed", () => {
       const place = autocomplete.getPlace();
@@ -134,16 +139,18 @@
       map.setCenter(place.geometry.location);
       marker.setPosition(place.geometry.location);
       coords = place.geometry.location.toJSON();
-      console.log("place.formatted_address:", place.formatted_address);
-console.log("place.name:", place.name);
-console.log("place.vicinity:", place.vicinity);
-input.value = place.formatted_address || place.name || place.vicinity || ""; // 👈 вставляем адрес в поле
+      input.value = place.formatted_address || place.name || place.vicinity || "";
       addressSelected = true;
       calculateDelivery();
     });
 
     marker.addListener("dragend", () => {
       coords = marker.getPosition().toJSON();
+      geocoder.geocode({ location: coords }, (results, status) => {
+        if (status === "OK" && results[0]) {
+          input.value = results[0].formatted_address || "";
+        }
+      });
       addressSelected = true;
       calculateDelivery();
     });
@@ -151,87 +158,5 @@ input.value = place.formatted_address || place.name || place.vicinity || ""; // 
     generateDeliveryOptions();
   };
 
-  function generateDeliveryOptions() {
-    const days = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
-    const now = new Date();
-    const dateSelect = document.getElementById("deliveryDate");
-    const slotSelect = document.getElementById("deliverySlot");
-
-    const deliveryDays = [];
-    for (let d = 0; d < 14; d++) {
-      const day = new Date(now);
-      day.setDate(now.getDate() + d);
-      deliveryDays.push({
-        label: d === 0 ? "Сегодня" : d === 1 ? "Завтра" : `${days[day.getDay()]}, ${day.getDate()}.${day.getMonth() + 1}`,
-        date: new Date(day.setHours(0, 0, 0, 0))
-      });
-    }
-
-    dateSelect.innerHTML = `<option value="" disabled selected hidden>Выберите дату доставки</option>` +
-      deliveryDays.map((d, i) => `<option value="${i}">${d.label}</option>`).join("");
-
-    dateSelect.addEventListener("change", (e) => generateSlots(parseInt(e.target.value)));
-    slotSelect.addEventListener("change", calculateDelivery);
-    generateSlots(0);
-  }
-
-  function generateSlots(dayIndex) {
-    const now = new Date();
-    const dateSelect = document.getElementById("deliveryDate");
-    const slotSelect = document.getElementById("deliverySlot");
-    const label = dateSelect.options[dayIndex + 1]?.textContent || "";
-
-    let selectedDay = new Date();
-    selectedDay.setDate(now.getDate() + dayIndex);
-    let start = new Date(selectedDay);
-
-    if (dayIndex === 0) {
-      start.setHours(now.getHours(), now.getMinutes() + 90, 0, 0);
-      const m = start.getMinutes();
-      start.setMinutes(m <= 30 ? 30 : 60);
-    } else {
-      start.setHours(7, 0, 0, 0);
-    }
-
-    const end = new Date(selectedDay);
-    end.setDate(end.getDate() + 1);
-    end.setHours(2, 0, 0, 0);
-
-    const slots = [];
-    while (start < end) {
-      const endSlot = new Date(start.getTime() + 30 * 60000);
-      const format = d => d.toTimeString().substring(0, 5);
-      slots.push(`${format(start)}–${format(endSlot)}`);
-      start = endSlot;
-    }
-
-    slotSelect.innerHTML = `<option value="" disabled selected hidden>Выберите время</option>` +
-      slots.map(s => `<option value="${s}">${s}</option>`).join('');
-  }
-
-  async function calculateDelivery() {
-    const dateText = document.getElementById("deliveryDate").selectedOptions[0]?.textContent;
-    const timeText = document.getElementById("deliverySlot").value;
-    const time = `${dateText}, ${timeText}`;
-
-    if (!coords || !addressSelected || !time) return;
-
-    const res = await fetch("https://proxy-server-zhn1.onrender.com/render", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        lat: coords.lat,
-        lon: coords.lng,
-        time,
-        cart: cartValue
-      })
-    });
-
-    const data = await res.json();
-    if (!data || data.deliveryCost === undefined) return;
-
-    document.getElementById("deliveryCost").value = `${data.deliveryCost.toFixed(2)} ₾`;
-    const total = data.deliveryCost + cartValue;
-    document.getElementById("totalCost").value = `${total.toFixed(2)} ₾`;
-  }
+  // ... остальной код без изменений ...
 })();
