@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 10000;
 const GOOGLE_API_KEY = "AIzaSyDRj1_fUDJqKatTrU4DMXAnVliqzAHPXjA";
 
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
 app.post("/render", async (req, res) => {
   // твой код доставки
