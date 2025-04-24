@@ -1,12 +1,10 @@
-// embed.js — отладочная версия с логами для Telegram WebApp
-
+// embed.js с собственной реализацией автоподсказок через Google API (fetch)
 (function () {
-  console.log("📦 embed.js загружен");
-
   const cartRaw = document.getElementById("cart_amount")?.innerText || "26,10₾";
   const cartValue = parseFloat(cartRaw.replace(/[₾,]/g, '.')) || 0;
   let coords = null;
   let addressSelected = false;
+  const apiKey = "AIzaSyDRj1_fUDJqKatTrU4DMXAnVliqzAHPXjA";
 
   const style = document.createElement('style');
   style.textContent = `
@@ -15,28 +13,20 @@
       background: #121212; color: white; font-family: Arial, sans-serif;
       padding: 1rem; border-radius: 12px; margin-top: 1rem;
     }
-    #delivery-widget h1 {
-      font-size: 1.3rem; margin-bottom: 1rem;
-    }
-    #delivery-widget label {
-      display: block; margin-top: 1rem; font-weight: bold;
-    }
     #delivery-widget input, #delivery-widget select {
       width: 100%; padding: 0.5rem; border-radius: 6px; border: none; margin-top: 0.4rem;
     }
-    #delivery-widget button {
-      width: 100%; padding: 0.75rem; background: #3b82f6;
-      color: white; border: none; border-radius: 8px; font-weight: bold;
-      margin-top: 2rem; font-size: 1rem;
+    #map { height: 300px; margin-top: 1rem; border-radius: 10px; }
+    #suggestions {
+      background: #fff; color: black; border-radius: 8px; box-shadow: 0 0 5px #0003;
+      margin-top: 0.3rem; position: absolute; width: calc(100% - 2rem);
+      z-index: 9999;
     }
-    #map {
-      height: 300px; max-height: 50vh; margin-top: 0.5rem; border-radius: 10px;
+    .suggestion-item {
+      padding: 0.5rem; cursor: pointer;
     }
-    .readonly {
-      background-color: #2a2a2a; color: #ccc;
-    }
-    .required-note {
-      color: #f87171; font-size: 0.85rem;
+    .suggestion-item:hover {
+      background-color: #eee;
     }
   `;
   document.head.appendChild(style);
@@ -44,54 +34,65 @@
   const container = document.createElement("div");
   container.id = "delivery-widget";
   container.innerHTML = `
-    <h1>Оформление заказа</h1>
-
-    <label>Адрес доставки <span class="required-note">* (необходимое поле)</span>
-      <input type="text" id="deliveryAddress" placeholder="Введите адрес" required />
+    <label>Адрес доставки
+      <input type="text" id="deliveryAddress" placeholder="Введите адрес" />
+      <div id="suggestions"></div>
     </label>
-
     <div id="map"></div>
   `;
   document.getElementById("delivery-block")?.appendChild(container);
 
   const script = document.createElement("script");
-  script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDRj1_fUDJqKatTrU4DMXAnVliqzAHPXjA&libraries=places&callback=initDeliveryMap`;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initDeliveryMap`;
   script.async = true;
   document.body.appendChild(script);
 
   window.initDeliveryMap = () => {
-    console.log("🗺️ initDeliveryMap вызван");
-
     const tbilisi = { lat: 41.7151, lng: 44.8271 };
     const map = new google.maps.Map(document.getElementById("map"), {
       center: tbilisi,
       zoom: 13,
     });
-
-    const marker = new google.maps.Marker({
-      position: tbilisi,
-      map,
-      draggable: true,
-    });
+    const marker = new google.maps.Marker({ position: tbilisi, map, draggable: true });
+    coords = tbilisi;
 
     const input = document.getElementById("deliveryAddress");
-    const autocomplete = new google.maps.places.Autocomplete(input);
-    autocomplete.setFields(["geometry", "formatted_address", "name"]);
+    const suggestions = document.getElementById("suggestions");
 
-    autocomplete.addListener("place_changed", () => {
-      console.log("📍 place_changed событие сработало");
-      const place = autocomplete.getPlace();
-      if (!place.geometry) return;
-      map.setCenter(place.geometry.location);
-      marker.setPosition(place.geometry.location);
-      coords = place.geometry.location.toJSON();
-      input.value = place.formatted_address || place.name || place.vicinity || "";
-      console.log("📝 Вставлен адрес:", input.value);
+    input.addEventListener("input", async () => {
+      const query = input.value.trim();
+      if (query.length < 3) return (suggestions.innerHTML = "");
+      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
+        query
+      )}&key=${apiKey}&language=ru&components=country:ge`;
+      const res = await fetch("https://proxy-server-zhn1.onrender.com/fetch?q=" + encodeURIComponent(url));
+      const data = await res.json();
+      suggestions.innerHTML = "";
+      if (!data.predictions) return;
+
+      data.predictions.forEach((item) => {
+        const el = document.createElement("div");
+        el.className = "suggestion-item";
+        el.innerText = item.description;
+        el.onclick = async () => {
+          input.value = item.description;
+          suggestions.innerHTML = "";
+          const detailUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${item.place_id}&key=${apiKey}`;
+          const detailRes = await fetch("https://proxy-server-zhn1.onrender.com/fetch?q=" + encodeURIComponent(detailUrl));
+          const details = await detailRes.json();
+          const location = details.result.geometry.location;
+          coords = location;
+          addressSelected = true;
+          map.setCenter(location);
+          marker.setPosition(location);
+        };
+        suggestions.appendChild(el);
+      });
     });
 
     marker.addListener("dragend", () => {
       coords = marker.getPosition().toJSON();
-      console.log("📦 Маркер перемещён. Координаты:", coords);
+      addressSelected = true;
     });
   };
 })();
