@@ -154,4 +154,14 @@
     generateOptions();
     document.getElementById("cartValue")?.setAttribute("value", `${cartValue.toFixed(2)} ₾`);
   };
+
+  if (!window.google || !window.google.maps) {
+    const gmapScript = document.createElement("script");
+    gmapScript.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDRj1_fUDJqKatTrU4DMXAnVliqzAHPXjA&libraries=places&callback=initMap";
+    gmapScript.async = true;
+    gmapScript.defer = true;
+    document.head.appendChild(gmapScript);
+  } else {
+    initMap();
+  }
 })();
