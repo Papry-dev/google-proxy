@@ -134,7 +134,10 @@
       map.setCenter(place.geometry.location);
       marker.setPosition(place.geometry.location);
       coords = place.geometry.location.toJSON();
-      input.value = place.formatted_address || ""; // 👈 вставляем адрес в поле
+      console.log("place.formatted_address:", place.formatted_address);
+console.log("place.name:", place.name);
+console.log("place.vicinity:", place.vicinity);
+input.value = place.formatted_address || place.name || place.vicinity || ""; // 👈 вставляем адрес в поле
       addressSelected = true;
       calculateDelivery();
     });
