@@ -14,7 +14,7 @@ app.post("/render", async (req, res) => {
 
 // Прокси к Google Places API
 app.get("/fetch", async (req, res) => {
-  const target = req.query.q;
+  const target = decodeURIComponent(req.query.q);
   if (!target || !target.startsWith("https://maps.googleapis.com")) {
     return res.status(400).json({ error: "Invalid URL" });
   }
@@ -24,11 +24,6 @@ app.get("/fetch", async (req, res) => {
     const data = await response.json();
     res.json(data);
   } catch (e) {
-    console.error("Fetch proxy error:", e);
     res.status(500).json({ error: "Fetch failed", details: e.message });
   }
-});
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
 });
