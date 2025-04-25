@@ -1,12 +1,14 @@
 (function () {
-  const cartRaw = document.getElementById("cart_amount")?.innerText || "26,10₾";
-  let cartValue = parseFloat(cartRaw.replace(/[₾,]/g, ".")) || 0;
-  console.log("💰 cartValue =", cartValue);
+  let cartValue = 0;
   let coords = null;
 
   function updateCartValue() {
-    const raw = document.getElementById("cart_amount")?.innerText || "0₾";
-    cartValue = parseFloat(raw.replace(/[₾,]/g, ".")) || 0;
+    const el = document.getElementById("cart_amount");
+    if (!el) return;
+
+    const raw = el.innerText || "0₾";
+    cartValue = parseFloat(raw.replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0;
+
     const cartValueInput = document.getElementById("cartValue");
     if (cartValueInput) {
       cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
