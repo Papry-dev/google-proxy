@@ -254,6 +254,7 @@
 
     generateOptions();
     document.getElementById("cartValue")?.setAttribute("value", `${cartValue.toFixed(2)} ₾`);
+    document.getElementById("cartValue").value = `${cartValue.toFixed(2)} ₾`;
   }
 
   if (!window.google || !window.google.maps) {
