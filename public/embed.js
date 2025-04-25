@@ -83,6 +83,9 @@
   `;
   document.getElementById("delivery-block")?.appendChild(container);
 
+  const deliveryCostInput = document.getElementById("deliveryCost");
+  const totalCostInput = document.getElementById("totalCost");
+
   const generateOptions = () => {
     const dateEl = document.getElementById("deliveryDate");
     const timeEl = document.getElementById("deliverySlot");
@@ -131,25 +134,46 @@
     const label = document.getElementById("deliveryDate").selectedOptions[0]?.textContent;
     const datetime = `${label}, ${time}`;
 
-    const res = await fetch("/render", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time: datetime, cart: cartValue })
-    });
+    try {
+      const res = await fetch("/render", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time: datetime, cart: cartValue })
+      });
 
-    const data = await res.json();
-    const delivery = parseFloat(data.deliveryCost || 0);
-    document.getElementById("deliveryCost").value = `${delivery.toFixed(2)} ₾`;
-    document.getElementById("totalCost").value = `${(delivery + cartValue).toFixed(2)} ₾`;
+      const data = await res.json();
+      if (!data || data.deliveryCost === undefined || data.deliveryCost === null) {
+        deliveryCostInput.value = "По согласованию";
+        totalCostInput.value = "—";
+        return;
+      }
+
+      const delivery = parseFloat(data.deliveryCost || 0);
+      deliveryCostInput.value = `${delivery.toFixed(2)} ₾`;
+      totalCostInput.value = `${(delivery + cartValue).toFixed(2)} ₾`;
+    } catch (err) {
+      console.error("Ошибка при расчёте доставки:", err);
+      deliveryCostInput.value = "Ошибка";
+    }
   };
 
   window.initMap = () => {
-    const input = document.getElementById("deliveryAddress");
+    const waitForInput = setInterval(() => {
+      const input = document.getElementById("deliveryAddress");
+      if (!input) return;
+      clearInterval(waitForInput);
+      initMapLogic(input);
+    }, 100);
+  };
+
+  function initMapLogic(input) {
+    const tbilisi = { lat: 41.7151, lng: 44.8271 };
     const map = new google.maps.Map(document.getElementById("map"), {
-      center: { lat: 41.7151, lng: 44.8271 },
+      center: tbilisi,
       zoom: 13,
     });
-    const marker = new google.maps.Marker({ map, position: { lat: 41.7151, lng: 44.8271 }, draggable: true });
+
+    const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
 
     const suggestionBox = document.createElement("div");
     suggestionBox.id = "suggestionBox";
@@ -162,6 +186,7 @@
       suggestionBox.style.left = window.scrollX + rect.left + "px";
       suggestionBox.style.width = rect.width + "px";
     };
+
     window.addEventListener("resize", positionBox);
     window.addEventListener("scroll", positionBox);
 
@@ -229,8 +254,7 @@
 
     generateOptions();
     document.getElementById("cartValue")?.setAttribute("value", `${cartValue.toFixed(2)} ₾`);
-    calcCost();
-  };
+  }
 
   if (!window.google || !window.google.maps) {
     const gmapScript = document.createElement("script");
