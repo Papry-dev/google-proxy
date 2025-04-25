@@ -37,11 +37,11 @@
     }
     #suggestionBox {
       position: absolute;
-      top: 4.8rem;
-      left: 1rem;
-      right: 1rem;
+      top: 100%;
+      left: 0;
+      width: 100%;
       background: #333;
-      z-index: 10000;
+      z-index: 1000;
       border-radius: 0 0 6px 6px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.3);
       max-height: 200px;
@@ -129,11 +129,10 @@
     });
 
     const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
-
     const input = document.getElementById("deliveryAddress");
     const suggestionBox = document.createElement("div");
     suggestionBox.id = "suggestionBox";
-    document.getElementById("delivery-widget").appendChild(suggestionBox);
+    input.parentElement.appendChild(suggestionBox);
 
     let timeout;
     input.addEventListener("input", () => {
@@ -142,7 +141,7 @@
       if (query.length < 3) return suggestionBox.style.display = "none";
 
       timeout = setTimeout(async () => {
-        const url = `/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`)}`;
+        const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`)}`;
         try {
           const res = await fetch(url);
           const data = await res.json();
@@ -154,7 +153,7 @@
               div.onclick = async () => {
                 input.value = p.description;
                 suggestionBox.style.display = "none";
-                const detailsUrl = `/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`)}`;
+                const detailsUrl = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`)}`;
                 const res2 = await fetch(detailsUrl);
                 const data2 = await res2.json();
                 if (data2.result?.geometry?.location) {
