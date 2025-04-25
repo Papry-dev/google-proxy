@@ -1,4 +1,5 @@
 (function () {
+  const proxy = "https://google-proxy-phpb.onrender.com";
   const cartRaw = document.getElementById("cart_amount")?.innerText || "26,10₾";
   const cartValue = parseFloat(cartRaw.replace(/[₾,]/g, ".")) || 0;
   let coords = null;
@@ -135,7 +136,7 @@
       if (query.length < 3) return suggestionBox.style.display = "none";
 
       timeout = setTimeout(async () => {
-        const url = `/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`)}`;
+        const url = `${proxy}/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`)}`;
         try {
           const res = await fetch(url);
           const data = await res.json();
@@ -151,7 +152,7 @@
               div.onclick = async () => {
                 input.value = p.description;
                 suggestionBox.style.display = "none";
-                const detailsUrl = `/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`)}`;
+                const detailsUrl = `${proxy}/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`)}`;
                 const res2 = await fetch(detailsUrl);
                 const data2 = await res2.json();
                 if (data2.result?.geometry?.location) {
