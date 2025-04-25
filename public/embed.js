@@ -240,6 +240,7 @@
 
     generateOptions();
     document.getElementById("cartValue")?.setAttribute("value", `${cartValue.toFixed(2)} ₾`);
+    calcCost();
   }
 
   if (!window.google || !window.google.maps) {
