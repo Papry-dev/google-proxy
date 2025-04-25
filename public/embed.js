@@ -248,9 +248,23 @@
       }, 400);
     });
 
-    marker.addListener("dragend", () => {
+    marker.addListener("dragend", async () => {
       coords = marker.getPosition().toJSON();
       calcCost();
+
+      try {
+        const geocodeUrl = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&language=ru`
+        )}`;
+        const geocodeRes = await fetch(geocodeUrl);
+        const geocodeData = await geocodeRes.json();
+        const newAddress = geocodeData.results?.[0]?.formatted_address;
+        if (newAddress) {
+          input.value = newAddress;
+        }
+      } catch (e) {
+        console.error("Ошибка при обратном геокодировании:", e);
+      }
     });
 
     generateOptions();
