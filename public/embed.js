@@ -136,7 +136,7 @@
     const datetime = `${label}, ${time}`;
 
     try {
-      const res = await fetch("/render", {
+      const res = await fetch("https://google-proxy-phpb.onrender.com/render", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time: datetime, cart: cartValue })
