@@ -12,7 +12,6 @@
       border-radius: 12px;
       color: white;
       margin-top: 1rem;
-      position: relative;
     }
     #delivery-widget label {
       display: block;
@@ -122,8 +121,8 @@
     });
 
     const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
-    const input = document.getElementById("deliveryAddress");
 
+    const input = document.getElementById("deliveryAddress");
     const suggestionBox = document.createElement("div");
     suggestionBox.id = "suggestionBox";
     input.parentElement.appendChild(suggestionBox);
@@ -135,14 +134,13 @@
       if (query.length < 3) return suggestionBox.style.display = "none";
 
       timeout = setTimeout(async () => {
-        const url = `/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`)}`;
-        console.log("🛰️ Отправка запроса:", url);
+        const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`
+        )}`;
         const res = await fetch(url);
         const data = await res.json();
-        console.log("📦 Ответ:", data);
-
         suggestionBox.innerHTML = "";
-        if (data.predictions?.length) {
+        if (data.predictions && data.predictions.length) {
           data.predictions.forEach(p => {
             const div = document.createElement("div");
             div.textContent = p.description;
@@ -153,7 +151,9 @@
             div.onclick = async () => {
               input.value = p.description;
               suggestionBox.style.display = "none";
-              const detailsUrl = `/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`)}`;
+              const detailsUrl = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+                `https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`
+              )}`;
               const res2 = await fetch(detailsUrl);
               const data2 = await res2.json();
               if (data2.result?.geometry?.location) {
@@ -190,7 +190,7 @@
     const res = await fetch("/render", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time: datetime, cart: cartValue })
+      body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time: datetime, cart: cartValue }),
     });
 
     const data = await res.json();
