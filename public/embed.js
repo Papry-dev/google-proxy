@@ -77,6 +77,7 @@
       <input type="text" id="deliveryAddress" placeholder="Введите адрес" required />
     </label>
     <div id="map"></div>
+    <button id="geolocateBtn" style="margin-top: 0.5rem; width: 100%; padding: 0.5rem; background: #4caf50; color: white; border: none; border-radius: 6px;">📍 Поделиться геопозицией</button>
     <label>Дата доставки
       <select id="deliveryDate" required></select>
     </label>
@@ -186,6 +187,27 @@
     });
 
     const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
+
+
+document.getElementById("geolocateBtn")?.addEventListener("click", () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const userLoc = new google.maps.LatLng(latitude, longitude);
+        marker.setPosition(userLoc);
+        map.setCenter(userLoc);
+        coords = { lat: latitude, lng: longitude };
+        getAddressFromCoords(coords);
+        calcCost();
+      },
+      (err) => {
+        console.warn("Геолокация отклонена или недоступна", err);
+      }
+    );
+  }
+});
+
   
    // Попробовать получить текущую геопозицию пользователя
 if (navigator.geolocation) {
