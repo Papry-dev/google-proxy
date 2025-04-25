@@ -141,7 +141,9 @@
       if (query.length < 3) return suggestionBox.style.display = "none";
 
       timeout = setTimeout(async () => {
-        const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`)}`;
+        const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+  `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`
+)}`;
         try {
           const res = await fetch(url);
           const data = await res.json();
