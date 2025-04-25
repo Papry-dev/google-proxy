@@ -1,6 +1,6 @@
 (function () {
   const cartRaw = document.getElementById("cart_amount")?.innerText || "26,10₾";
-  const cartValue = parseFloat(cartRaw.replace(/[₾,]/g, '.')) || 0;
+  const cartValue = parseFloat(cartRaw.replace(/[₾,]/g, ".")) || 0;
   let coords = null;
 
   const style = document.createElement("style");
@@ -12,6 +12,7 @@
       border-radius: 12px;
       color: white;
       margin-top: 1rem;
+      position: relative;
     }
     #delivery-widget label {
       display: block;
@@ -134,41 +135,42 @@
       if (query.length < 3) return suggestionBox.style.display = "none";
 
       timeout = setTimeout(async () => {
-        const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
-          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`
-        )}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        suggestionBox.innerHTML = "";
-        if (data.predictions && data.predictions.length) {
-          data.predictions.forEach(p => {
-            const div = document.createElement("div");
-            div.textContent = p.description;
-            div.style.padding = "0.5rem";
-            div.style.cursor = "pointer";
-            div.onmouseenter = () => div.style.background = "#444";
-            div.onmouseleave = () => div.style.background = "#333";
-            div.onclick = async () => {
-              input.value = p.description;
-              suggestionBox.style.display = "none";
-              const detailsUrl = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
-                `https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`
-              )}`;
-              const res2 = await fetch(detailsUrl);
-              const data2 = await res2.json();
-              if (data2.result?.geometry?.location) {
-                const { lat, lng } = data2.result.geometry.location;
-                coords = { lat, lng };
-                const loc = new google.maps.LatLng(lat, lng);
-                marker.setPosition(loc);
-                map.setCenter(loc);
-                calcCost();
-              }
-            };
-            suggestionBox.appendChild(div);
-          });
-          suggestionBox.style.display = "block";
-        } else {
+        const url = `/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`)}`;
+        try {
+          const res = await fetch(url);
+          const data = await res.json();
+          suggestionBox.innerHTML = "";
+          if (data.predictions?.length) {
+            data.predictions.forEach(p => {
+              const div = document.createElement("div");
+              div.textContent = p.description;
+              div.style.padding = "0.5rem";
+              div.style.cursor = "pointer";
+              div.onmouseenter = () => div.style.background = "#444";
+              div.onmouseleave = () => div.style.background = "#333";
+              div.onclick = async () => {
+                input.value = p.description;
+                suggestionBox.style.display = "none";
+                const detailsUrl = `/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`)}`;
+                const res2 = await fetch(detailsUrl);
+                const data2 = await res2.json();
+                if (data2.result?.geometry?.location) {
+                  const { lat, lng } = data2.result.geometry.location;
+                  coords = { lat, lng };
+                  const loc = new google.maps.LatLng(lat, lng);
+                  marker.setPosition(loc);
+                  map.setCenter(loc);
+                  calcCost();
+                }
+              };
+              suggestionBox.appendChild(div);
+            });
+            suggestionBox.style.display = "block";
+          } else {
+            suggestionBox.style.display = "none";
+          }
+        } catch (err) {
+          console.error("Failed to fetch suggestions", err);
           suggestionBox.style.display = "none";
         }
       }, 400);
@@ -190,7 +192,7 @@
     const res = await fetch("/render", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time: datetime, cart: cartValue }),
+      body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time: datetime, cart: cartValue })
     });
 
     const data = await res.json();
