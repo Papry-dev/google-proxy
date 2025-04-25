@@ -1,8 +1,19 @@
 (function () {
   const cartRaw = document.getElementById("cart_amount")?.innerText || "26,10₾";
-  const cartValue = parseFloat(cartRaw.replace(/[₾,]/g, ".")) || 0;
-  console.log("💰 cartValue =", cartValue); // ← лог
+  let cartValue = parseFloat(cartRaw.replace(/[₾,]/g, ".")) || 0;
+  console.log("💰 cartValue =", cartValue);
   let coords = null;
+
+  function updateCartValue() {
+    const raw = document.getElementById("cart_amount")?.innerText || "0₾";
+    cartValue = parseFloat(raw.replace(/[₾,]/g, ".")) || 0;
+    const cartValueInput = document.getElementById("cartValue");
+    if (cartValueInput) {
+      cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
+    }
+  }
+
+  setInterval(updateCartValue, 1000);
 
   const style = document.createElement("style");
   style.textContent = `
@@ -175,6 +186,24 @@
     });
 
     const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
+  
+   // Попробовать получить текущую геопозицию пользователя
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude } = pos.coords;
+      const userLoc = new google.maps.LatLng(latitude, longitude);
+      marker.setPosition(userLoc);
+      map.setCenter(userLoc);
+      coords = { lat: latitude, lng: longitude };
+      getAddressFromCoords(coords);
+      calcCost();
+    },
+    (err) => {
+      console.warn("Геолокация отклонена или недоступна", err);
+    }
+  );
+}
 
     const suggestionBox = document.createElement("div");
     suggestionBox.id = "suggestionBox";
@@ -250,6 +279,7 @@
 
     marker.addListener("dragend", async () => {
       coords = marker.getPosition().toJSON();
+      getAddressFromCoords(coords);
       calcCost();
 
       try {
@@ -267,9 +297,26 @@
       }
     });
 
+    async function getAddressFromCoords(coords) {
+      const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&language=ru`
+      )}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const address = data.results?.[0]?.formatted_address;
+        if (address) {
+          const input = document.getElementById("deliveryAddress");
+          if (input) input.value = address;
+        }
+      } catch (err) {
+        console.error("Не удалось получить адрес по координатам", err);
+      }
+    }
+
     generateOptions();
-    document.getElementById("cartValue")?.setAttribute("value", `${cartValue.toFixed(2)} ₾`);
-    document.getElementById("cartValue").value = `${cartValue.toFixed(2)} ₾`;
+    updateCartValue();
   }
 
   if (!window.google || !window.google.maps) {
