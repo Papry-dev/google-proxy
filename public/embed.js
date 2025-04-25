@@ -1,6 +1,7 @@
 (function () {
   const cartRaw = document.getElementById("cart_amount")?.innerText || "26,10₾";
   const cartValue = parseFloat(cartRaw.replace(/[₾,]/g, ".")) || 0;
+  console.log("💰 cartValue =", cartValue); // ← лог
   let coords = null;
 
   const style = document.createElement("style");
