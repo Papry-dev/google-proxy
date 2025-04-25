@@ -186,24 +186,6 @@
     });
 
     const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
-  
-   // Попробовать получить текущую геопозицию пользователя
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const { latitude, longitude } = pos.coords;
-      const userLoc = new google.maps.LatLng(latitude, longitude);
-      marker.setPosition(userLoc);
-      map.setCenter(userLoc);
-      coords = { lat: latitude, lng: longitude };
-      getAddressFromCoords(coords);
-      calcCost();
-    },
-    (err) => {
-      console.warn("Геолокация отклонена или недоступна", err);
-    }
-  );
-}
 
     const suggestionBox = document.createElement("div");
     suggestionBox.id = "suggestionBox";
