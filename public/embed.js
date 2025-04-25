@@ -250,6 +250,7 @@
 
     marker.addListener("dragend", async () => {
       coords = marker.getPosition().toJSON();
+      getAddressFromCoords(coords);
       calcCost();
 
       try {
@@ -266,6 +267,24 @@
         console.error("Ошибка при обратном геокодировании:", e);
       }
     });
+
+    async function getAddressFromCoords(coords) {
+  const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+    `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&language=ru`
+  )}`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const address = data.results?.[0]?.formatted_address;
+    if (address) {
+      const input = document.getElementById("deliveryAddress");
+      if (input) input.value = address;
+    }
+  } catch (err) {
+    console.error("Не удалось получить адрес по координатам", err);
+  }
+}
 
     generateOptions();
     document.getElementById("cartValue")?.setAttribute("value", `${cartValue.toFixed(2)} ₾`);
