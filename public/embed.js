@@ -152,7 +152,7 @@
       const res = await fetch("https://google-proxy-phpb.onrender.com/render", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time: datetime, cart: cartValue })
+        body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time: datetime, cart: parseFloat((document.getElementById("cart_amount")?.innerText || "0").replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0 })
       });
 
       const data = await res.json();
