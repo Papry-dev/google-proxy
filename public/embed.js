@@ -123,6 +123,7 @@
 
     const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
     const input = document.getElementById("deliveryAddress");
+
     const suggestionBox = document.createElement("div");
     suggestionBox.id = "suggestionBox";
     input.parentElement.appendChild(suggestionBox);
@@ -135,10 +136,13 @@
 
       timeout = setTimeout(async () => {
         const url = `/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`)}`;
+        console.log("🛰️ Отправка запроса:", url);
         const res = await fetch(url);
         const data = await res.json();
+        console.log("📦 Ответ:", data);
+
         suggestionBox.innerHTML = "";
-        if (data.predictions && data.predictions.length) {
+        if (data.predictions?.length) {
           data.predictions.forEach(p => {
             const div = document.createElement("div");
             div.textContent = p.description;
@@ -186,7 +190,7 @@
     const res = await fetch("/render", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time: datetime, cart: cartValue }),
+      body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time: datetime, cart: cartValue })
     });
 
     const data = await res.json();
