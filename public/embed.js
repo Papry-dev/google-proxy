@@ -189,23 +189,36 @@
 
     const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
   
-   // Попробовать получить текущую геопозицию пользователя
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const { latitude, longitude } = pos.coords;
-      const userLoc = new google.maps.LatLng(latitude, longitude);
-      marker.setPosition(userLoc);
-      map.setCenter(userLoc);
-      coords = { lat: latitude, lng: longitude };
-      getAddressFromCoords(coords);
-      calcCost();
-    },
-    (err) => {
-      console.warn("Геолокация отклонена или недоступна", err);
-    }
-  );
-}
+   const geoButton = document.createElement("button");
+geoButton.textContent = "📍 Определить местоположение";
+geoButton.style.marginTop = "0.5rem";
+geoButton.style.width = "100%";
+geoButton.style.padding = "0.5rem";
+geoButton.style.borderRadius = "6px";
+geoButton.style.border = "none";
+geoButton.style.background = "#444";
+geoButton.style.color = "white";
+geoButton.style.cursor = "pointer";
+input.parentElement.appendChild(geoButton);
+
+geoButton.addEventListener("click", () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const userLoc = new google.maps.LatLng(latitude, longitude);
+        marker.setPosition(userLoc);
+        map.setCenter(userLoc);
+        coords = { lat: latitude, lng: longitude };
+        getAddressFromCoords(coords);
+        calcCost();
+      },
+      (err) => {
+        console.warn("Геолокация отклонена или недоступна", err);
+      }
+    );
+  }
+});
 
     const suggestionBox = document.createElement("div");
     suggestionBox.id = "suggestionBox";
