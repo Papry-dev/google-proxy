@@ -18,7 +18,6 @@
       display: block;
       margin-top: 0.5rem;
       font-weight: bold;
-      position: relative;
     }
     #delivery-widget input, #delivery-widget select {
       width: 100%;
@@ -143,11 +142,10 @@
       if (query.length < 3) return suggestionBox.style.display = "none";
 
       timeout = setTimeout(async () => {
-        const url = `/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`)}`;
+        const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`)}`;
         try {
           const res = await fetch(url);
           const data = await res.json();
-          console.log("Предложения:", data.predictions);
           suggestionBox.innerHTML = "";
           if (data.predictions?.length) {
             data.predictions.forEach(p => {
@@ -156,7 +154,7 @@
               div.onclick = async () => {
                 input.value = p.description;
                 suggestionBox.style.display = "none";
-                const detailsUrl = `/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`)}`;
+                const detailsUrl = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`)}`;
                 const res2 = await fetch(detailsUrl);
                 const data2 = await res2.json();
                 if (data2.result?.geometry?.location) {
