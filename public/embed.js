@@ -1,23 +1,8 @@
 (function () {
-  let cartValue = 0;
+  const cartRaw = document.getElementById("cart_amount")?.innerText || "26,10₾";
+  const cartValue = parseFloat(cartRaw.replace(/[₾,]/g, ".")) || 0;
+  console.log("💰 cartValue =", cartValue); // ← лог
   let coords = null;
-
-  function updateCartValue() {
-    const el = document.getElementById("cart_amount");
-    if (!el) return;
-
-    const raw = el.innerText || "0₾";
-    cartValue = parseFloat(raw.replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0;
-
-    const cartValueInput = document.getElementById("cartValue");
-    if (cartValueInput) {
-      cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
-    }
-
-    calcCost();
-  }
-
-  setInterval(updateCartValue, 1000);
 
   const style = document.createElement("style");
   style.textContent = `
@@ -172,4 +157,128 @@
       deliveryCostInput.value = "Ошибка";
     }
   };
+
+  window.initMap = () => {
+    const waitForInput = setInterval(() => {
+      const input = document.getElementById("deliveryAddress");
+      if (!input) return;
+      clearInterval(waitForInput);
+      initMapLogic(input);
+    }, 100);
+  };
+
+  function initMapLogic(input) {
+    const tbilisi = { lat: 41.7151, lng: 44.8271 };
+    const map = new google.maps.Map(document.getElementById("map"), {
+      center: tbilisi,
+      zoom: 13,
+    });
+
+    const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
+
+    const suggestionBox = document.createElement("div");
+    suggestionBox.id = "suggestionBox";
+    input.parentElement.appendChild(suggestionBox);
+
+    const positionBox = () => {
+      const rect = input.getBoundingClientRect();
+      suggestionBox.style.position = "absolute";
+      suggestionBox.style.top = window.scrollY + rect.bottom + "px";
+      suggestionBox.style.left = window.scrollX + rect.left + "px";
+      suggestionBox.style.width = rect.width + "px";
+    };
+
+    window.addEventListener("resize", positionBox);
+    window.addEventListener("scroll", positionBox);
+
+    let timeout;
+    input.addEventListener("input", () => {
+      clearTimeout(timeout);
+      const query = input.value.trim();
+      if (query.length < 3) {
+        suggestionBox.style.display = "none";
+        return;
+      }
+
+      timeout = setTimeout(async () => {
+        const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`
+        )}`;
+
+        try {
+          const res = await fetch(url);
+          const data = await res.json();
+          suggestionBox.innerHTML = "";
+
+          if (data.predictions?.length) {
+            positionBox();
+            data.predictions.forEach(p => {
+              const div = document.createElement("div");
+              div.textContent = p.description;
+              div.onclick = async () => {
+                input.value = p.description;
+                suggestionBox.style.display = "none";
+
+                const detailsUrl = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+                  `https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`
+                )}`;
+
+                const res2 = await fetch(detailsUrl);
+                const data2 = await res2.json();
+
+                if (data2.result?.geometry?.location) {
+                  const { lat, lng } = data2.result.geometry.location;
+                  coords = { lat, lng };
+                  const loc = new google.maps.LatLng(lat, lng);
+                  marker.setPosition(loc);
+                  map.setCenter(loc);
+                  calcCost();
+                }
+              };
+              suggestionBox.appendChild(div);
+            });
+            suggestionBox.style.display = "block";
+          } else {
+            suggestionBox.style.display = "none";
+          }
+        } catch (err) {
+          console.error("Failed to fetch suggestions", err);
+          suggestionBox.style.display = "none";
+        }
+      }, 400);
+    });
+
+    marker.addListener("dragend", async () => {
+      coords = marker.getPosition().toJSON();
+      calcCost();
+
+      try {
+        const geocodeUrl = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&language=ru`
+        )}`;
+        const geocodeRes = await fetch(geocodeUrl);
+        const geocodeData = await geocodeRes.json();
+        const newAddress = geocodeData.results?.[0]?.formatted_address;
+        if (newAddress) {
+          input.value = newAddress;
+        }
+      } catch (e) {
+        console.error("Ошибка при обратном геокодировании:", e);
+      }
+    });
+
+    generateOptions();
+    document.getElementById("cartValue")?.setAttribute("value", `${cartValue.toFixed(2)} ₾`);
+    document.getElementById("cartValue").value = `${cartValue.toFixed(2)} ₾`;
+  }
+
+  if (!window.google || !window.google.maps) {
+    const gmapScript = document.createElement("script");
+    gmapScript.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDRj1_fUDJqKatTrU4DMXAnVliqzAHPXjA&libraries=places&callback=initMap";
+    gmapScript.async = true;
+    gmapScript.defer = true;
+    document.head.appendChild(gmapScript);
+  } else {
+    initMap();
+  }
 })();
