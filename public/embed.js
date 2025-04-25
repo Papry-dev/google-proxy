@@ -144,22 +144,12 @@
   };
 
   window.initMap = () => {
-    const waitForInput = setInterval(() => {
-      const input = document.getElementById("deliveryAddress");
-      if (!input) return;
-      clearInterval(waitForInput);
-      initMapLogic(input);
-    }, 100);
-  };
-
-  function initMapLogic(input) {
-    const tbilisi = { lat: 41.7151, lng: 44.8271 };
+    const input = document.getElementById("deliveryAddress");
     const map = new google.maps.Map(document.getElementById("map"), {
-      center: tbilisi,
+      center: { lat: 41.7151, lng: 44.8271 },
       zoom: 13,
     });
-
-    const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
+    const marker = new google.maps.Marker({ map, position: { lat: 41.7151, lng: 44.8271 }, draggable: true });
 
     const suggestionBox = document.createElement("div");
     suggestionBox.id = "suggestionBox";
@@ -172,7 +162,6 @@
       suggestionBox.style.left = window.scrollX + rect.left + "px";
       suggestionBox.style.width = rect.width + "px";
     };
-
     window.addEventListener("resize", positionBox);
     window.addEventListener("scroll", positionBox);
 
@@ -241,7 +230,7 @@
     generateOptions();
     document.getElementById("cartValue")?.setAttribute("value", `${cartValue.toFixed(2)} ₾`);
     calcCost();
-  }
+  };
 
   if (!window.google || !window.google.maps) {
     const gmapScript = document.createElement("script");
