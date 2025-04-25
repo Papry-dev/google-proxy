@@ -3,17 +3,22 @@
   let coords = null;
 
   function updateCartValue() {
-    const el = document.getElementById("cart_amount");
-    if (!el) return;
-
-    const raw = el.innerText || "0₾";
-    cartValue = parseFloat(raw.replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0;
-
-    const cartValueInput = document.getElementById("cartValue");
-    if (cartValueInput) {
-      cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
-    }
+  const el = document.querySelector("#cart_amount") || document.querySelector(".cart__amount span");
+  if (!el) {
+    console.warn("❗ Элемент #cart_amount не найден");
+    return;
   }
+
+  const raw = el.innerText || "0₾";
+  cartValue = parseFloat(raw.replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0;
+
+  const cartValueInput = document.getElementById("cartValue");
+  if (cartValueInput) {
+    cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
+  }
+
+  console.log("🛒 Обновлена сумма корзины:", cartValue);
+}
 
   setInterval(updateCartValue, 1000);
 
