@@ -1,3 +1,4 @@
+// Новый правильный embed.js
 (function () {
   let cartValue = 0;
   let coords = null;
@@ -5,61 +6,113 @@
   function updateCartValue() {
     const el = document.querySelector("#cart_amount") || document.querySelector(".cart__amount span");
     if (!el) {
-      console.warn("\u2757 \u042dлемент #cart_amount не найден");
+      console.warn("\u2757 \u042d\u043b\u0435\u043c\u0435\u043d\u0442 #cart_amount \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d");
       return;
     }
-
     const raw = el.innerText || "0₾";
-    cartValue = parseFloat(raw.replace(/[\u20be,]/g, ".").replace(/[^\d.]/g, "")) || 0;
+    cartValue = parseFloat(raw.replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0;
 
     const cartValueInput = document.getElementById("cartValue");
     if (cartValueInput) {
       cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
     }
 
-    console.log("\ud83d\uded2 \u041eбновлена сумма корзины:", cartValue);
+    console.log("\ud83d\uded2 \u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0430 \u0441\u0443\u043c\u043c\u0430 \u043a\u043e\u0440\u0437\u0438\u043d\u044b:", cartValue);
   }
 
   setInterval(updateCartValue, 1000);
 
-  const deliveryCostInput = document.getElementById("deliveryCost");
-  const totalCostInput = document.getElementById("totalCost");
-
-  const calcCost = async () => {
-    const time = document.getElementById("deliverySlot")?.value;
-    if (!coords || !time) return;
-
-    const label = document.getElementById("deliveryDate").selectedOptions[0]?.textContent;
-    const datetime = `${label}, ${time}`;
-
-    try {
-      const res = await fetch("https://google-proxy-phpb.onrender.com/render", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lat: coords.lat,
-          lon: coords.lng,
-          time: datetime,
-          cart: cartValue // <<-- исправлено здесь
-        })
-      });
-
-      const data = await res.json();
-      if (!data || data.deliveryCost === undefined || data.deliveryCost === null) {
-        deliveryCostInput.value = "\u041fо согласованию";
-        totalCostInput.value = "—";
-        return;
-      }
-
-      const delivery = parseFloat(data.deliveryCost || 0);
-      deliveryCostInput.value = `${delivery.toFixed(2)} ₾`;
-      totalCostInput.value = `${(delivery + cartValue).toFixed(2)} ₾`;
-    } catch (err) {
-      console.error("\u041eшибка при расчете доставки:", err);
-      deliveryCostInput.value = "\u041eшибка";
+  const style = document.createElement("style");
+  style.textContent = `
+    #delivery-widget * { box-sizing: border-box; }
+    #delivery-widget {
+      background: #1f1f1f;
+      padding: 1rem;
+      border-radius: 12px;
+      color: white;
+      margin-top: 1rem;
+      position: relative;
     }
-  };
+    #delivery-widget label {
+      display: block;
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+    #delivery-widget input, #delivery-widget select {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: none;
+      margin-top: 0.3rem;
+    }
+    #delivery-widget #map {
+      height: 200px;
+      margin-top: 0.5rem;
+      border-radius: 10px;
+    }
+    #delivery-widget .readonly {
+      background: #2a2a2a;
+      color: #ccc;
+    }
+    #geoButton {
+      margin-top: 0.5rem;
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: none;
+      background: #444;
+      color: white;
+      cursor: pointer;
+    }
+    #suggestionBox {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      background: #333;
+      z-index: 1000;
+      border-radius: 0 0 6px 6px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+    #suggestionBox div {
+      padding: 0.5rem;
+      cursor: pointer;
+    }
+    #suggestionBox div:hover {
+      background: #444;
+    }
+  `;
+  document.head.appendChild(style);
 
-  // Остальная часть initMap, initMapLogic и весь остальной код остаётся без изменений
+  const container = document.createElement("div");
+  container.id = "delivery-widget";
+  container.innerHTML = `
+    <label>Адрес доставки
+      <input type="text" id="deliveryAddress" placeholder="Введите адрес" required />
+    </label>
+    <div id="map"></div>
+    <button id="geoButton">📍 Определить местоположение</button>
+    <label>Дата доставки
+      <select id="deliveryDate" required></select>
+    </label>
+    <label>Время доставки
+      <select id="deliverySlot" required></select>
+    </label>
+    <label>Стоимость корзины
+      <input type="text" id="cartValue" class="readonly" readonly />
+    </label>
+    <label>Стоимость доставки
+      <input type="text" id="deliveryCost" class="readonly" readonly />
+    </label>
+    <label>Итого
+      <input type="text" id="totalCost" class="readonly" readonly />
+    </label>
+  `;
 
+  document.getElementById("delivery-block")?.appendChild(container);
+
+  // Дальше -- init карты, кнопка геопозиции и калькуляция (добавлю сразу после фикса контейнера)
 })();
