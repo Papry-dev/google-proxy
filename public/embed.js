@@ -136,6 +136,7 @@
     <label>Итого
       <input type="text" id="totalCost" class="readonly" readonly />
     </label>
+    <div style="height: 2.5rem;"></div>
     <label>Номер телефона <span style="color:red">*</span><small>Обязательное поле</small>
       <input type="tel" id="phone" placeholder="Введите номер телефона" required />
     </label>
