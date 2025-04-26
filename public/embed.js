@@ -3,19 +3,15 @@
   let coords = null;
 
   function updateCartValue() {
-    const el = document.querySelector("#cart_panel_amount") || document.querySelector("#cart_amount") || document.querySelector(".cart__amount span");
-    if (!el) {
-      console.warn("\u26A0\uFE0F Не найден элемент суммы корзины");
-      return;
-    }
-
-    const raw = el.innerText || "0₾";
-    cartValue = parseFloat(raw.replace(/[₾\s]/g, '').replace(',', '.')) || 0;
+    const raw = sessionStorage.getItem("papry_cart") || "0₾";
+    cartValue = parseFloat(raw.replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0;
 
     const cartValueInput = document.getElementById("cartValue");
     if (cartValueInput) {
       cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
     }
+
+    console.log("🛒 Обновлена сумма корзины:", cartValue);
   }
 
   setInterval(updateCartValue, 1000);
@@ -82,7 +78,6 @@
       <input type="text" id="deliveryAddress" placeholder="Введите адрес" required />
     </label>
     <div id="map"></div>
-    <button id="geoButton" style="margin-top:0.5rem;width:100%;padding:0.5rem;border-radius:6px;border:none;background:#444;color:white;cursor:pointer">\ud83d\udccd Определить местоположение</button>
     <label>Дата доставки
       <select id="deliveryDate" required></select>
     </label>
@@ -186,10 +181,25 @@
 
   function initMapLogic(input) {
     const tbilisi = { lat: 41.7151, lng: 44.8271 };
-    const map = new google.maps.Map(document.getElementById("map"), { center: tbilisi, zoom: 13 });
+    const map = new google.maps.Map(document.getElementById("map"), {
+      center: tbilisi,
+      zoom: 13,
+    });
+
     const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
 
-    const geoButton = document.getElementById("geoButton");
+    const geoButton = document.createElement("button");
+    geoButton.textContent = "\ud83d\udccd Определить местоположение";
+    geoButton.style.marginTop = "0.5rem";
+    geoButton.style.width = "100%";
+    geoButton.style.padding = "0.5rem";
+    geoButton.style.borderRadius = "6px";
+    geoButton.style.border = "none";
+    geoButton.style.background = "#444";
+    geoButton.style.color = "white";
+    geoButton.style.cursor = "pointer";
+    input.parentElement.appendChild(geoButton);
+
     geoButton.addEventListener("click", () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -215,10 +225,12 @@
 
     const positionBox = () => {
       const rect = input.getBoundingClientRect();
+      suggestionBox.style.position = "absolute";
       suggestionBox.style.top = window.scrollY + rect.bottom + "px";
       suggestionBox.style.left = window.scrollX + rect.left + "px";
       suggestionBox.style.width = rect.width + "px";
     };
+
     window.addEventListener("resize", positionBox);
     window.addEventListener("scroll", positionBox);
 
@@ -226,14 +238,21 @@
     input.addEventListener("input", () => {
       clearTimeout(timeout);
       const query = input.value.trim();
-      if (query.length < 3) return suggestionBox.style.display = "none";
+      if (query.length < 3) {
+        suggestionBox.style.display = "none";
+        return;
+      }
 
       timeout = setTimeout(async () => {
-        const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`)}`;
+        const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`
+        )}`;
+
         try {
           const res = await fetch(url);
           const data = await res.json();
           suggestionBox.innerHTML = "";
+
           if (data.predictions?.length) {
             positionBox();
             data.predictions.forEach(p => {
@@ -242,9 +261,14 @@
               div.onclick = async () => {
                 input.value = p.description;
                 suggestionBox.style.display = "none";
-                const detailsUrl = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`)}`;
+
+                const detailsUrl = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+                  `https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`
+                )}`;
+
                 const res2 = await fetch(detailsUrl);
                 const data2 = await res2.json();
+
                 if (data2.result?.geometry?.location) {
                   const { lat, lng } = data2.result.geometry.location;
                   coords = { lat, lng };
@@ -261,7 +285,7 @@
             suggestionBox.style.display = "none";
           }
         } catch (err) {
-          console.error("Ошибка подстановки адресов", err);
+          console.error("Failed to fetch suggestions", err);
           suggestionBox.style.display = "none";
         }
       }, 400);
@@ -273,22 +297,25 @@
       calcCost();
     });
 
+    async function getAddressFromCoords(coords) {
+      const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&language=ru`
+      )}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const address = data.results?.[0]?.formatted_address;
+        if (address) {
+          const input = document.getElementById("deliveryAddress");
+          if (input) input.value = address;
+        }
+      } catch (err) {
+        console.error("Не удалось получить адрес по координатам", err);
+      }
+    }
+
     generateOptions();
     updateCartValue();
-  }
-
-  async function getAddressFromCoords(coords) {
-    const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&language=ru`)}`;
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      const address = data.results?.[0]?.formatted_address;
-      if (address) {
-        const input = document.getElementById("deliveryAddress");
-        if (input) input.value = address;
-      }
-    } catch (err) {
-      console.error("Ошибка геокодирования", err);
-    }
   }
 })();
