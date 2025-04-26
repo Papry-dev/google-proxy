@@ -33,11 +33,13 @@
 
     }
     #delivery-widget label small {
-      display: block;
-      color: red;
-      font-weight: normal;
-      margin-top: 0.2rem;
+    display: inline;
+    color: #00BFFF;
+    font-weight: normal;
+    margin-left: 0.3rem;
+    font-size: 13px;
     }
+
     #delivery-widget input, #delivery-widget select {
       width: 100%;
       padding: 0.5rem;
