@@ -49,7 +49,7 @@
     }
 
     #deliverySlot {
-  margin-bottom: 4rem; 
+  margin-bottom: 2,5rem; 
     }
 
     #delivery-widget #map {
