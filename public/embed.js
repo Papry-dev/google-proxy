@@ -286,6 +286,9 @@ geoButton.style.border = "none";
 geoButton.style.background = "#444";
 geoButton.style.color = "white";
 geoButton.style.cursor = "pointer";
+geoButton.style.fontSize = "0.85rem"; 
+geoButton.style.padding = "0.3rem";   
+geoButton.style.width = "90%";         
 input.parentElement.appendChild(geoButton);
 
 geoButton.addEventListener("click", () => {
