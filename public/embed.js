@@ -135,45 +135,65 @@
   const totalCostInput = document.getElementById("totalCost");
 
   const generateOptions = () => {
-    const dateEl = document.getElementById("deliveryDate");
-    const timeEl = document.getElementById("deliverySlot");
+  const dateEl = document.getElementById("deliveryDate");
+  const timeEl = document.getElementById("deliverySlot");
 
-    const now = new Date();
-    const dates = [];
-    for (let i = 0; i < 14; i++) {
-      const d = new Date();
-      d.setDate(now.getDate() + i);
-      const label = i === 0 ? "Сегодня" : d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
-      dates.push({ date: d, label });
+  const now = new Date();
+  const dates = [];
+  for (let i = 0; i < 14; i++) {
+    const d = new Date();
+    d.setDate(now.getDate() + i);
+    const label = i === 0 ? "Сегодня" : d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
+    dates.push({ date: d, label });
+  }
+
+  dateEl.innerHTML = `<option value="" disabled selected>Выберите дату</option>` +
+    dates.map((d, i) => `<option value="${i}">${d.label}</option>`).join("");
+
+  const updateTimeSlots = (i) => {
+    const date = dates[i].date;
+    const nowTime = new Date();
+    const slots = [];
+
+    let start = new Date(date);
+
+    if (i === 0) {
+      // Если сегодня — учитываем +1.5 часа от текущего момента
+      start.setHours(nowTime.getHours(), nowTime.getMinutes(), 0, 0);
+      start = new Date(start.getTime() + 90 * 60 * 1000); // +1.5 часа
+
+      // Округляем до ближайших 30 минут
+      const mins = start.getMinutes();
+      if (mins < 30) {
+        start.setMinutes(30, 0, 0);
+      } else {
+        start.setHours(start.getHours() + 1, 0, 0, 0);
+      }
+    } else {
+      // Если не сегодня — с 7:00 утра
+      start.setHours(7, 0, 0, 0);
     }
 
-    dateEl.innerHTML = dates.map((d, i) => `<option value="${i}">${d.label}</option>`).join("");
+    const end = new Date(date);
+    end.setDate(end.getDate() + 1);
+    end.setHours(2, 0, 0, 0); // до 2:00 ночи следующего дня
 
-    const updateTimeSlots = (i) => {
-      const date = dates[i].date;
-      const start = new Date(date);
-      const nowTime = new Date();
-      start.setHours(i === 0 ? nowTime.getHours() + 1.5 : 7, 0, 0, 0);
-      const end = new Date(date);
-      end.setDate(end.getDate() + 1);
-      end.setHours(2, 0, 0, 0);
+    while (start < end) {
+      const endSlot = new Date(start.getTime() + 30 * 60 * 1000);
+      const fmt = d => d.toTimeString().slice(0, 5);
+      slots.push(`${fmt(start)}–${fmt(endSlot)}`);
+      start.setTime(endSlot.getTime());
+    }
 
-      const slots = [];
-      while (start < end) {
-        const endSlot = new Date(start.getTime() + 30 * 60 * 1000);
-        const fmt = d => d.toTimeString().slice(0, 5);
-        slots.push(`${fmt(start)}–${fmt(endSlot)}`);
-        start.setTime(endSlot.getTime());
-      }
+    timeEl.innerHTML = `<option value="" disabled selected>Выберите время</option>` +
+      slots.map(s => `<option value="${s}">${s}</option>`).join("");
 
-      timeEl.innerHTML = slots.map(s => `<option value="${s}">${s}</option>`).join("");
-      calcCost();
-    };
-
-    dateEl.addEventListener("change", () => updateTimeSlots(parseInt(dateEl.value)));
-    timeEl.addEventListener("change", calcCost);
-    updateTimeSlots(0);
+    calcCost();
   };
+
+  dateEl.addEventListener("change", () => updateTimeSlots(parseInt(dateEl.value)));
+  timeEl.addEventListener("change", calcCost);
+};
 
   const calcCost = async () => {
     const time = document.getElementById("deliverySlot")?.value;
