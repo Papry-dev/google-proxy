@@ -74,7 +74,36 @@
     }
   `;
   document.head.appendChild(style);
+  
+  function setupFieldHighlighting() {
+  const fieldsToHighlight = [
+    "deliveryAddress",
+    "deliveryDate",
+    "deliverySlot",
+    "cartValue",
+    "deliveryCost",
+    "totalCost",
+    "phone",
+    "paymentMethod"
+  ];
 
+  fieldsToHighlight.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const updateColor = () => {
+      if (el.value && el.value.trim() !== "") {
+        el.style.color = "#ffffff"; // Белый, если заполнено
+      } else {
+        el.style.color = "#ccc"; // Серый, если пусто
+      }
+    };
+
+    el.addEventListener("input", updateColor);
+    el.addEventListener("change", updateColor);
+    updateColor(); // сразу обновить при загрузке
+  });
+}
   const container = document.createElement("div");
   container.id = "delivery-widget";
   container.innerHTML = `
@@ -386,6 +415,7 @@ geoButton.addEventListener("click", () => {
 
     generateOptions();
     updateCartValue();
+    setupFieldHighlighting();
   }
 
   if (!window.google || !window.google.maps) {
