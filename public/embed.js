@@ -44,7 +44,7 @@
       margin-top: 0.3rem;
     }
     #delivery-widget #map {
-      height: 200px;
+      height: 300px;
       margin-top: 0.5rem;
       border-radius: 10px;
     }
