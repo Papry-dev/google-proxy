@@ -3,15 +3,16 @@
   let coords = null;
 
   function updateCartValue() {
-    const raw = sessionStorage.getItem("papry_cart") || "0₾";
+    const el = document.getElementById("cart_amount");
+    if (!el) return;
+
+    const raw = el.innerText || "0₾";
     cartValue = parseFloat(raw.replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0;
 
     const cartValueInput = document.getElementById("cartValue");
     if (cartValueInput) {
       cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
     }
-
-    console.log("🛒 Обновлена сумма корзины:", cartValue);
   }
 
   setInterval(updateCartValue, 1000);
@@ -151,12 +152,7 @@
       const res = await fetch("https://google-proxy-phpb.onrender.com/render", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lat: coords.lat,
-          lon: coords.lng,
-          time: datetime,
-          cart: cartValue
-        })
+        body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time: datetime, cart: parseFloat((document.getElementById("cart_amount")?.innerText || "0").replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0 })
       });
 
       const data = await res.json();
@@ -192,37 +188,37 @@
     });
 
     const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
+  
+   const geoButton = document.createElement("button");
+geoButton.textContent = "📍 Определить местоположение";
+geoButton.style.marginTop = "0.5rem";
+geoButton.style.width = "100%";
+geoButton.style.padding = "0.5rem";
+geoButton.style.borderRadius = "6px";
+geoButton.style.border = "none";
+geoButton.style.background = "#444";
+geoButton.style.color = "white";
+geoButton.style.cursor = "pointer";
+input.parentElement.appendChild(geoButton);
 
-    const geoButton = document.createElement("button");
-    geoButton.textContent = "📍 Определить местоположение";
-    geoButton.style.marginTop = "0.5rem";
-    geoButton.style.width = "100%";
-    geoButton.style.padding = "0.5rem";
-    geoButton.style.borderRadius = "6px";
-    geoButton.style.border = "none";
-    geoButton.style.background = "#444";
-    geoButton.style.color = "white";
-    geoButton.style.cursor = "pointer";
-    input.parentElement.appendChild(geoButton);
-
-    geoButton.addEventListener("click", () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const { latitude, longitude } = pos.coords;
-            const userLoc = new google.maps.LatLng(latitude, longitude);
-            marker.setPosition(userLoc);
-            map.setCenter(userLoc);
-            coords = { lat: latitude, lng: longitude };
-            getAddressFromCoords(coords);
-            calcCost();
-          },
-          (err) => {
-            console.warn("Геолокация отклонена или недоступна", err);
-          }
-        );
+geoButton.addEventListener("click", () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const userLoc = new google.maps.LatLng(latitude, longitude);
+        marker.setPosition(userLoc);
+        map.setCenter(userLoc);
+        coords = { lat: latitude, lng: longitude };
+        getAddressFromCoords(coords);
+        calcCost();
+      },
+      (err) => {
+        console.warn("Геолокация отклонена или недоступна", err);
       }
-    });
+    );
+  }
+});
 
     const suggestionBox = document.createElement("div");
     suggestionBox.id = "suggestionBox";
@@ -230,6 +226,7 @@
 
     const positionBox = () => {
       const rect = input.getBoundingClientRect();
+      suggestionBox.style.position = "absolute";
       suggestionBox.style.top = window.scrollY + rect.bottom + "px";
       suggestionBox.style.left = window.scrollX + rect.left + "px";
       suggestionBox.style.width = rect.width + "px";
@@ -299,6 +296,20 @@
       coords = marker.getPosition().toJSON();
       getAddressFromCoords(coords);
       calcCost();
+
+      try {
+        const geocodeUrl = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&language=ru`
+        )}`;
+        const geocodeRes = await fetch(geocodeUrl);
+        const geocodeData = await geocodeRes.json();
+        const newAddress = geocodeData.results?.[0]?.formatted_address;
+        if (newAddress) {
+          input.value = newAddress;
+        }
+      } catch (e) {
+        console.error("Ошибка при обратном геокодировании:", e);
+      }
     });
 
     async function getAddressFromCoords(coords) {
@@ -321,5 +332,15 @@
 
     generateOptions();
     updateCartValue();
+  }
+
+  if (!window.google || !window.google.maps) {
+    const gmapScript = document.createElement("script");
+    gmapScript.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDRj1_fUDJqKatTrU4DMXAnVliqzAHPXjA&libraries=places&callback=initMap";
+    gmapScript.async = true;
+    gmapScript.defer = true;
+    document.head.appendChild(gmapScript);
+  } else {
+    initMap();
   }
 })();
