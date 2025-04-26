@@ -44,7 +44,7 @@
       margin-top: 0.3rem;
     }
     #delivery-widget #map {
-      height: 200px;
+      height: 350px;
       margin-top: 0.5rem;
       border-radius: 10px;
     }
@@ -237,11 +237,32 @@
   function initMapLogic(input) {
     const tbilisi = { lat: 41.7151, lng: 44.8271 };
     const map = new google.maps.Map(document.getElementById("map"), {
-      center: tbilisi,
-      zoom: 13,
-    });
+  center: tbilisi,
+  zoom: 13,
+});
 
-    const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
+const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
+
+const fullscreenBtn = document.createElement("button");
+fullscreenBtn.textContent = "🔍 Развернуть карту";
+fullscreenBtn.style.marginTop = "0.5rem";
+fullscreenBtn.style.width = "100%";
+fullscreenBtn.style.padding = "0.5rem";
+fullscreenBtn.style.borderRadius = "6px";
+fullscreenBtn.style.border = "none";
+fullscreenBtn.style.background = "#555";
+fullscreenBtn.style.color = "white";
+fullscreenBtn.style.cursor = "pointer";
+
+fullscreenBtn.onclick = () => {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    document.getElementById("map").requestFullscreen();
+  }
+};
+
+document.getElementById("map").parentElement.appendChild(fullscreenBtn);
   
    const geoButton = document.createElement("button");
 geoButton.textContent = "📍 Определить местоположение";
