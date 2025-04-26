@@ -293,8 +293,6 @@ geoButton.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
 const mapContainer = document.getElementById("map").parentElement;
 mapContainer.insertBefore(geoButton, document.getElementById("map"));  // Вставляем ПЕРЕД картой
 
-const mapContainer = document.getElementById("map").parentElement;
-
 geoButton.addEventListener("click", () => {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
