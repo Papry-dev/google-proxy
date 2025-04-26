@@ -285,10 +285,13 @@ geoButton.style.fontSize = "14px";
 geoButton.style.borderRadius = "8px";
 geoButton.style.border = "none";
 geoButton.style.marginBottom = "0.5rem";
-geoButton.style.background = "#3a3a3a"; // Чуть светлее фон
+geoButton.style.background = "#3a3a3a";
 geoButton.style.color = "white";
 geoButton.style.cursor = "pointer";
-geoButton.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)"; // Легкая тень
+geoButton.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
+
+const mapContainer = document.getElementById("map").parentElement;
+mapContainer.insertBefore(geoButton, document.getElementById("map"));  // Вставляем ПЕРЕД картой
 
 const mapContainer = document.getElementById("map").parentElement;
 mapContainer.insertBefore(geoButton, mapContainer.firstChild);
