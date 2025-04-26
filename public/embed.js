@@ -3,23 +3,21 @@
   let coords = null;
 
   function updateCartValue() {
-    const el = document.querySelector("#cart_amount") ||
-                document.querySelector(".cart__amount span") ||
-                document.querySelector(".order_topay_curr");
+    const el = document.querySelector("#cart_amount") || document.querySelector(".cart__amount span");
     if (!el) {
-      console.warn("\u26a0\ufe0f Не нашли сумму корзины ни по одному из селекторов");
+      console.warn("\u26A0\uFE0F Элемент суммы корзины не найден");
       return;
     }
 
-    const raw = el.innerText || "0";
-    cartValue = parseFloat(raw.replace(/[\u20be\u20ac\$,]/g, ".").replace(/[^\d.]/g, "")) || 0;
+    const raw = el.innerText || "0₾";
+    cartValue = parseFloat(raw.replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0;
 
     const cartValueInput = document.getElementById("cartValue");
     if (cartValueInput) {
-      cartValueInput.value = `${cartValue.toFixed(2)} \u20be`;
+      cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
     }
 
-    console.log("\ud83d\udeb2 Обновили сумму корзины:", cartValue);
+    console.log("\uD83D\uDED2 Сумма корзины обновлена:", cartValue);
   }
 
   setInterval(updateCartValue, 1000);
@@ -170,12 +168,21 @@
       }
 
       const delivery = parseFloat(data.deliveryCost || 0);
-      deliveryCostInput.value = `${delivery.toFixed(2)} \u20be`;
-      totalCostInput.value = `${(delivery + cartValue).toFixed(2)} \u20be`;
+      deliveryCostInput.value = `${delivery.toFixed(2)} ₾`;
+      totalCostInput.value = `${(delivery + cartValue).toFixed(2)} ₾`;
     } catch (err) {
       console.error("Ошибка при расчёте доставки:", err);
       deliveryCostInput.value = "Ошибка";
     }
+  };
+
+  window.initMap = () => {
+    const waitForInput = setInterval(() => {
+      const input = document.getElementById("deliveryAddress");
+      if (!input) return;
+      clearInterval(waitForInput);
+      initMapLogic(input);
+    }, 100);
   };
 
   function initMapLogic(input) {
@@ -188,7 +195,7 @@
     const marker = new google.maps.Marker({ map, position: tbilisi, draggable: true });
 
     const geoButton = document.createElement("button");
-    geoButton.textContent = "\ud83d\udccd Определить местоположение";
+    geoButton.textContent = "📍 Определить местоположение";
     geoButton.style.marginTop = "0.5rem";
     geoButton.style.width = "100%";
     geoButton.style.padding = "0.5rem";
@@ -224,6 +231,7 @@
 
     const positionBox = () => {
       const rect = input.getBoundingClientRect();
+      suggestionBox.style.position = "absolute";
       suggestionBox.style.top = window.scrollY + rect.bottom + "px";
       suggestionBox.style.left = window.scrollX + rect.left + "px";
       suggestionBox.style.width = rect.width + "px";
@@ -242,7 +250,9 @@
       }
 
       timeout = setTimeout(async () => {
-        const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`)}`;
+        const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&language=ru&components=country:ge`
+        )}`;
 
         try {
           const res = await fetch(url);
@@ -258,7 +268,9 @@
                 input.value = p.description;
                 suggestionBox.style.display = "none";
 
-                const detailsUrl = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`)}`;
+                const detailsUrl = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+                  `https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=geometry`
+                )}`;
 
                 const res2 = await fetch(detailsUrl);
                 const data2 = await res2.json();
@@ -292,7 +304,10 @@
     });
 
     async function getAddressFromCoords(coords) {
-      const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&language=ru`)}`;
+      const url = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&language=ru`
+      )}`;
+
       try {
         const res = await fetch(url);
         const data = await res.json();
@@ -308,15 +323,5 @@
 
     generateOptions();
     updateCartValue();
-  }
-
-  if (!window.google || !window.google.maps) {
-    const gmapScript = document.createElement("script");
-    gmapScript.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDRj1_fUDJqKatTrU4DMXAnVliqzAHPXjA&libraries=places&callback=initMap";
-    gmapScript.async = true;
-    gmapScript.defer = true;
-    document.head.appendChild(gmapScript);
-  } else {
-    initMap();
   }
 })();
