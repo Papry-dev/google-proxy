@@ -278,18 +278,20 @@
   
    const geoButton = document.createElement("button");
 geoButton.textContent = "📍 Определить местоположение";
-geoButton.style.marginTop = "0.5rem";
+geoButton.style.display = "block";
 geoButton.style.width = "100%";
-geoButton.style.padding = "0.5rem";
-geoButton.style.borderRadius = "6px";
+geoButton.style.padding = "0.7rem";
+geoButton.style.fontSize = "14px";
+geoButton.style.borderRadius = "8px";
 geoButton.style.border = "none";
-geoButton.style.background = "#444";
+geoButton.style.marginBottom = "0.5rem";
+geoButton.style.background = "#3a3a3a"; // Чуть светлее фон
 geoButton.style.color = "white";
 geoButton.style.cursor = "pointer";
-geoButton.style.fontSize = "0.85rem"; 
-geoButton.style.padding = "0.3rem";   
-geoButton.style.width = "90%";         
-document.getElementById("map").after(geoButton);
+geoButton.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)"; // Легкая тень
+
+const mapContainer = document.getElementById("map").parentElement;
+mapContainer.insertBefore(geoButton, mapContainer.firstChild);
 
 geoButton.addEventListener("click", () => {
   if (navigator.geolocation) {
