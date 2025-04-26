@@ -50,7 +50,7 @@
     #delivery-widget #map {
       height: 300px;
       margin-top: 0.5rem;
-      margin-bottom: 2rem;
+      margin-bottom: 4rem;
       border-radius: 10px;
     }
     #delivery-widget .readonly {
