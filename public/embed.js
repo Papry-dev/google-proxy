@@ -50,6 +50,7 @@
     #delivery-widget #map {
       height: 300px;
       margin-top: 0.5rem;
+      margin-bottom: 2rem;
       border-radius: 10px;
     }
     #delivery-widget .readonly {
@@ -284,7 +285,7 @@ geoButton.style.padding = "0.7rem";
 geoButton.style.fontSize = "14px";
 geoButton.style.borderRadius = "8px";
 geoButton.style.border = "none";
-geoButton.style.marginTop = "1rem";  // 🔥 Вот тут добавили отступ сверху
+geoButton.style.marginTop = "2rem";  // 🔥 Вот тут добавили отступ сверху
 geoButton.style.marginBottom = "0.5rem";
 geoButton.style.background = "#3a3a3a";
 geoButton.style.color = "white";
