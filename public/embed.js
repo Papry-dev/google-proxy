@@ -48,11 +48,18 @@
       margin-top: 0.3rem;
     }
 
-    #delivery-widget input::placeholder,
+    /* СЕРЫЙ ТЕКСТ ПЛЕЙСХОЛДЕРА и select */
+    #delivery-widget input::placeholder {
+      color: #999;
+    }
     #delivery-widget select:invalid {
-    color: #999; /* светло-серый цвет */
+      color: #999;
     }
     
+    #delivery-widget select:valid {
+      color: #ffffff;
+    }
+
     #deliverySlot {
   margin-bottom: 2.5rem; 
     }
@@ -107,12 +114,12 @@
     if (!el) return;
 
     const updateColor = () => {
-      if (el.value && el.value.trim() !== "") {
-        el.style.color = "#ffffff"; // Белый, если заполнено
-      } else {
-        el.style.color = "#ccc"; // Серый, если пусто
-      }
-    };
+    if (el.value && el.value.trim() !== "") {
+    el.style.color = "#ffffff"; // Белый, если заполнено
+     } else {
+    el.style.color = "#999"; // Серый, если пусто
+  }
+};
 
     el.addEventListener("input", updateColor);
     el.addEventListener("change", updateColor);
