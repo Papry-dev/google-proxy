@@ -146,6 +146,7 @@
         <option value="card">Оплата картой</option>
         <option value="transfer">Оплата переводом</option>
       </select>
+    <div style="height: 2.5rem;"></div>
     </label>
     <label>Комментарий к заказу
       <input type="text" id="orderComment" placeholder="Комментарий для магазина" />
