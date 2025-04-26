@@ -1,3 +1,5 @@
+// server.js с расчётом по радиусу
+
 const express = require("express");
 const cors = require("cors");
 const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
@@ -11,84 +13,66 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Радиус Земли в км
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 function calculateDeliveryCost(distanceKm, cart, timeLabel) {
-  // 1. Базовая цена по расстоянию
   const ranges = [
     { max: 1, cost: 7 },
-    { max: 3, cost: 10 },
-    { max: 4, cost: 11 },
-    { max: 5, cost: 11.5 },
-    { max: 6, cost: 12 },
-    { max: 7, cost: 13 },
-    { max: 8, cost: 13.5 },
-    { max: 10, cost: 14 },
-    { max: 11, cost: 18 },
-    { max: 12, cost: 19 },
-    { max: 13, cost: 21.5 },
-    { max: 15, cost: 21.5 },
-    { max: 16, cost: 23.5 },
-    { max: 18, cost: 23.5 },
-    { max: 19, cost: 23.5 }
+    { max: 2, cost: 9 },
+    { max: 3, cost: 11 },
+    { max: 4, cost: 13 },
+    { max: 5, cost: 15 },
+    { max: 6, cost: 17 },
+    { max: 7, cost: 19 },
+    { max: 8, cost: 21 },
+    { max: 9, cost: 23 },
+    { max: 10, cost: 25 },
+    { max: 12, cost: 30 },
+    { max: 14, cost: 35 },
+    { max: 16, cost: 40 },
+    { max: 18, cost: 45 },
+    { max: 19, cost: 50 }
   ];
 
   const base = ranges.find(r => distanceKm <= r.max)?.cost;
   if (!base) return null;
 
-  // 2. Надбавка по времени
   let timeMultiplier = 1;
-  const timeMap = [
-    { from: "00:00", to: "07:00", mult: 0.9 },
-    { from: "07:00", to: "08:00", mult: 0.95 },
-    { from: "08:00", to: "11:00", mult: 1.1 },
-    { from: "11:00", to: "15:00", mult: 1 },
-    { from: "15:00", to: "16:30", mult: 1.1 },
-    { from: "16:30", to: "19:30", mult: 1.25 },
-    { from: "19:30", to: "23:00", mult: 1 },
-    { from: "23:00", to: "24:00", mult: 0.9 }
-  ];
-  const timeOnly = timeLabel?.match(/\b\d{2}:\d{2}\b/)?.[0];
-  if (timeOnly) {
-    for (const { from, to, mult } of timeMap) {
-      if (timeOnly >= from && timeOnly < to) {
-        timeMultiplier = mult;
-        break;
-      }
-    }
+  if (/(21:30|22:00|22:30|23:00|23:30|00:00|00:30|01:00|01:30|02:00)/.test(timeLabel)) {
+    timeMultiplier = 1.2;
   }
 
-  let cost = base * timeMultiplier;
-
-  // 3. Надбавка за корзину
-  if (cart > 70 && cart <= 100) {
-    cost += 3;
-  } else if (cart > 100 && cart <= 150) {
-    cost += 5;
-  } else if (cart > 150 && cart <= 250) {
-    cost += 10;
+  if (cart > 500 && cart <= 800) {
+    return 3 * (base * timeMultiplier) + 15;
   } else if (cart > 250 && cart <= 500) {
-    cost = 2 * cost + 15;
-  } else if (cart > 500 && cart <= 800) {
-    cost = 3 * cost + 15;
-  } else if (cart > 800 && cart <= 1500) {
-    cost = 4 * cost + 20;
+    return 2 * (base * timeMultiplier) + 15;
+  } else if (cart > 150 && cart <= 250) {
+    return (base * timeMultiplier) + 10;
+  } else if (cart > 100 && cart <= 150) {
+    return (base * timeMultiplier) + 5;
+  } else if (cart > 70 && cart <= 100) {
+    return (base * timeMultiplier) + 3;
+  } else {
+    return base * timeMultiplier;
   }
-
-  return cost;
 }
 
 app.post("/render", async (req, res) => {
   const { lat, lon, time, cart } = req.body;
-  const start = { lat: 41.776127, lon: 44.753418 };
-
-  const distanceUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${start.lat},${start.lon}&destinations=${lat},${lon}&units=metric&key=${GOOGLE_API_KEY}`;
+  const start = { lat: 41.776127, lon: 44.753418 }; // Магазин
 
   try {
-    const result = await fetch(distanceUrl);
-    const json = await result.json();
-    const meters = json.rows?.[0]?.elements?.[0]?.distance?.value;
-    if (!meters) throw new Error("Can't determine distance");
-
-    const km = meters / 1000;
+    const km = haversineDistance(start.lat, start.lon, lat, lon);
     const cost = calculateDeliveryCost(km, cart, time);
     if (cost === null) {
       return res.json({ deliveryCost: null, note: "Стоимость будет согласована с менеджером" });
