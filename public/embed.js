@@ -47,6 +47,11 @@
       border: none;
       margin-top: 0.3rem;
     }
+
+    #deliverySlot {
+  margin-bottom: 4rem; 
+    }
+
     #delivery-widget #map {
       height: 300px;
       margin-top: 0.5rem;
