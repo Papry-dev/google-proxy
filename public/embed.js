@@ -48,6 +48,11 @@
       margin-top: 0.3rem;
     }
 
+    #delivery-widget input::placeholder,
+    #delivery-widget select:invalid {
+    color: #999; /* светло-серый цвет */
+    }
+    
     #deliverySlot {
   margin-bottom: 2.5rem; 
     }
