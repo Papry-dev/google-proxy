@@ -11,8 +11,10 @@
       cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
     }
 
-    console.log("🛒 Загружена сумма корзины из sessionStorage:", cartValue);
+    console.log("🛒 Обновлена сумма корзины:", cartValue);
   }
+
+  setInterval(updateCartValue, 1000);
 
   const style = document.createElement("style");
   style.textContent = `
@@ -228,7 +230,6 @@
 
     const positionBox = () => {
       const rect = input.getBoundingClientRect();
-      suggestionBox.style.position = "absolute";
       suggestionBox.style.top = window.scrollY + rect.bottom + "px";
       suggestionBox.style.left = window.scrollX + rect.left + "px";
       suggestionBox.style.width = rect.width + "px";
