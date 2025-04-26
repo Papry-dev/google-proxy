@@ -193,7 +193,7 @@
 
   dateEl.addEventListener("change", () => updateTimeSlots(parseInt(dateEl.value)));
   timeEl.addEventListener("change", calcCost);
-};
+}
 
   const calcCost = async () => {
     const time = document.getElementById("deliverySlot")?.value;
