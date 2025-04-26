@@ -48,10 +48,10 @@
       margin-top: 0.3rem;
     }
 
-    /* СЕРЫЙ ТЕКСТ ПЛЕЙСХОЛДЕРА и select */
     #delivery-widget input::placeholder {
       color: #999;
     }
+
     #delivery-widget select:invalid {
       color: #999;
     }
