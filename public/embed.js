@@ -3,16 +3,16 @@
   let coords = null;
 
   function updateCartValue() {
-  const raw = sessionStorage.getItem("papry_cart") || "0₾";
-  cartValue = parseFloat(raw.replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0;
+    const raw = sessionStorage.getItem("papry_cart") || "0₾";
+    cartValue = parseFloat(raw.replace(/[\u20be,]/g, ".").replace(/[^\d.]/g, "")) || 0;
 
-  const cartValueInput = document.getElementById("cartValue");
-  if (cartValueInput) {
-    cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
+    const cartValueInput = document.getElementById("cartValue");
+    if (cartValueInput) {
+      cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
+    }
+
+    console.log("🛒 Обновлена сумма корзины:", cartValue);
   }
-
-  console.log("🛒 Обновлена сумма корзины:", cartValue);
-}
 
   const style = document.createElement("style");
   style.textContent = `
@@ -91,8 +91,41 @@
     <label>Итого
       <input type="text" id="totalCost" class="readonly" readonly />
     </label>
+    <label>Номер телефона
+      <input type="tel" id="phone" placeholder="Введите номер телефона" />
+    </label>
+    <label>Комментарий к заказу
+      <input type="text" id="orderComment" placeholder="Комментарий для магазина" />
+    </label>
+    <label>Способ оплаты
+      <select id="paymentMethod">
+        <option value="card">Оплата картой</option>
+        <option value="transfer">Оплата переводом</option>
+      </select>
+    </label>
+    <label>Номер подъезда
+      <input type="text" id="entrance" placeholder="№ подъезда/входа" />
+    </label>
+    <label>Этаж
+      <input type="text" id="floor" placeholder="Этаж" />
+    </label>
+    <label>Квартира
+      <input type="text" id="flat" placeholder="№ квартиры" />
+    </label>
+    <label>Код домофона
+      <input type="text" id="intercom" placeholder="Код домофона" />
+    </label>
+    <label>Код лифта
+      <input type="text" id="elevator" placeholder="Код лифта (если есть)" />
+    </label>
+    <label>Прочее
+      <input type="text" id="other" placeholder="Дополнительная информация" />
+    </label>
   `;
   document.getElementById("delivery-block")?.appendChild(container);
+
+})();
+
 
   const deliveryCostInput = document.getElementById("deliveryCost");
   const totalCostInput = document.getElementById("totalCost");
