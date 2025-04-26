@@ -30,6 +30,12 @@
       margin-top: 0.5rem;
       font-weight: bold;
     }
+    #delivery-widget label small {
+      display: block;
+      color: red;
+      font-weight: normal;
+      margin-top: 0.2rem;
+    }
     #delivery-widget input, #delivery-widget select {
       width: 100%;
       padding: 0.5rem;
@@ -72,14 +78,14 @@
   const container = document.createElement("div");
   container.id = "delivery-widget";
   container.innerHTML = `
-    <label>Адрес доставки
+    <label>Адрес доставки <span style="color:red">*</span><small>Обязательное поле</small>
       <input type="text" id="deliveryAddress" placeholder="Введите адрес" required />
     </label>
     <div id="map"></div>
-    <label>Дата доставки
+    <label>Дата доставки <span style="color:red">*</span><small>Обязательное поле</small>
       <select id="deliveryDate" required></select>
     </label>
-    <label>Время доставки
+    <label>Время доставки <span style="color:red">*</span><small>Обязательное поле</small>
       <select id="deliverySlot" required></select>
     </label>
     <label>Стоимость корзины
@@ -91,14 +97,14 @@
     <label>Итого
       <input type="text" id="totalCost" class="readonly" readonly />
     </label>
-    <label>Номер телефона
-      <input type="tel" id="phone" placeholder="Введите номер телефона" />
+    <label>Номер телефона <span style="color:red">*</span><small>Обязательное поле</small>
+      <input type="tel" id="phone" placeholder="Введите номер телефона" required />
     </label>
     <label>Комментарий к заказу
       <input type="text" id="orderComment" placeholder="Комментарий для магазина" />
     </label>
-    <label>Способ оплаты
-      <select id="paymentMethod">
+    <label>Способ оплаты <span style="color:red">*</span><small>Обязательное поле</small>
+      <select id="paymentMethod" required>
         <option value="card">Оплата картой</option>
         <option value="transfer">Оплата переводом</option>
       </select>
