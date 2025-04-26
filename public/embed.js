@@ -4,21 +4,26 @@
   let coords = null;
 
   function updateCartValue() {
-    const el = document.querySelector("#cart_amount") || document.querySelector(".cart__amount span");
-    if (!el) {
-      console.warn("\u2757 \u042d\u043b\u0435\u043c\u0435\u043d\u0442 #cart_amount \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d");
-      return;
-    }
-    const raw = el.innerText || "0₾";
-    cartValue = parseFloat(raw.replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0;
+  const el =
+    document.querySelector("#cart_amount") ||
+    document.querySelector(".cart__amount span") ||
+    document.querySelector("#cart_panel_amount");
 
-    const cartValueInput = document.getElementById("cartValue");
-    if (cartValueInput) {
-      cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
-    }
-
-    console.log("\ud83d\uded2 \u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0430 \u0441\u0443\u043c\u043c\u0430 \u043a\u043e\u0440\u0437\u0438\u043d\u044b:", cartValue);
+  if (!el) {
+    console.warn("❗ Элемент суммы корзины не найден");
+    return;
   }
+
+  const raw = el.innerText || "0₾";
+  cartValue = parseFloat(raw.replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0;
+
+  const cartValueInput = document.getElementById("cartValue");
+  if (cartValueInput) {
+    cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
+  }
+
+  console.log("🛒 Обновлена сумма корзины:", cartValue);
+}
 
   setInterval(updateCartValue, 1000);
 
