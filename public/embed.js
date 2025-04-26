@@ -141,14 +141,14 @@
       <input type="tel" id="phone" placeholder="Введите номер телефона" required />
     </label>
     <div style="margin-bottom: 2rem;"></div>
-    <label>Комментарий к заказу
-      <input type="text" id="orderComment" placeholder="Комментарий для магазина" />
-    </label>
     <label>Способ оплаты <span style="color:red">*</span><small>Обязательное поле</small>
       <select id="paymentMethod" required>
         <option value="card">Оплата картой</option>
         <option value="transfer">Оплата переводом</option>
       </select>
+    </label>
+    <label>Комментарий к заказу
+      <input type="text" id="orderComment" placeholder="Комментарий для магазина" />
     </label>
     <label>Номер подъезда
       <input type="text" id="entrance" placeholder="№ подъезда/входа" />
