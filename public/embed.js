@@ -289,7 +289,7 @@ geoButton.style.cursor = "pointer";
 geoButton.style.fontSize = "0.85rem"; 
 geoButton.style.padding = "0.3rem";   
 geoButton.style.width = "90%";         
-input.parentElement.appendChild(geoButton);
+document.getElementById("map").after(geoButton);
 
 geoButton.addEventListener("click", () => {
   if (navigator.geolocation) {
