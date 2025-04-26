@@ -124,8 +124,6 @@
   `;
   document.getElementById("delivery-block")?.appendChild(container);
 
-})();
-
 
   const deliveryCostInput = document.getElementById("deliveryCost");
   const totalCostInput = document.getElementById("totalCost");
