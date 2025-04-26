@@ -3,20 +3,15 @@
   let coords = null;
 
   function updateCartValue() {
-    const saved = sessionStorage.getItem("papry_cart");
-    if (!saved) {
-      console.warn("❗ Сумма корзины в sessionStorage не найдена");
-      return;
-    }
-
-    cartValue = parseFloat(saved.replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0;
+    const raw = sessionStorage.getItem("papry_cart") || "0₾";
+    cartValue = parseFloat(raw.replace(/[₾,]/g, ".").replace(/[^\d.]/g, "")) || 0;
 
     const cartValueInput = document.getElementById("cartValue");
     if (cartValueInput) {
       cartValueInput.value = `${cartValue.toFixed(2)} ₾`;
     }
 
-    console.log("🛒 Обновлена сумма корзины из sessionStorage:", cartValue);
+    console.log("🛒 Обновлена сумма корзины через sessionStorage:", cartValue);
   }
 
   setInterval(updateCartValue, 1000);
@@ -156,7 +151,12 @@
       const res = await fetch("https://google-proxy-phpb.onrender.com/render", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lat: coords.lat, lon: coords.lng, time: datetime, cart: cartValue })
+        body: JSON.stringify({
+          lat: coords.lat,
+          lon: coords.lng,
+          time: datetime,
+          cart: cartValue
+        })
       });
 
       const data = await res.json();
@@ -300,20 +300,6 @@
       coords = marker.getPosition().toJSON();
       getAddressFromCoords(coords);
       calcCost();
-
-      try {
-        const geocodeUrl = `https://google-proxy-phpb.onrender.com/fetch?q=${encodeURIComponent(
-          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&language=ru`
-        )}`;
-        const geocodeRes = await fetch(geocodeUrl);
-        const geocodeData = await geocodeRes.json();
-        const newAddress = geocodeData.results?.[0]?.formatted_address;
-        if (newAddress) {
-          input.value = newAddress;
-        }
-      } catch (e) {
-        console.error("Ошибка при обратном геокодировании:", e);
-      }
     });
 
     async function getAddressFromCoords(coords) {
@@ -337,4 +323,5 @@
     generateOptions();
     updateCartValue();
   }
+
 })();
