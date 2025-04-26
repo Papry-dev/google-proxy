@@ -26,9 +26,12 @@
       position: relative;
     }
     #delivery-widget label {
+      #delivery-widget label {
       display: block;
       margin-top: 0.5rem;
       font-weight: bold;
+      font-size: 18px;
+
     }
     #delivery-widget label small {
       display: block;
