@@ -25,48 +25,81 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-function calculateDeliveryCost(distanceKm, cart, timeLabel) {
-  const ranges = [
+function calculateDeliveryCost(distanceKm, cartValue, timeLabel) {
+  const distanceRanges = [
     { max: 1, cost: 7 },
-    { max: 2, cost: 9 },
-    { max: 3, cost: 11 },
-    { max: 4, cost: 13 },
-    { max: 5, cost: 15 },
-    { max: 6, cost: 17 },
-    { max: 7, cost: 19 },
-    { max: 8, cost: 21 },
-    { max: 9, cost: 23 },
-    { max: 10, cost: 25 },
-    { max: 12, cost: 30 },
-    { max: 14, cost: 35 },
-    { max: 16, cost: 40 },
-    { max: 18, cost: 45 },
-    { max: 19, cost: 50 }
+    { max: 3, cost: 10 },
+    { max: 4, cost: 11 },
+    { max: 5, cost: 11.5 },
+    { max: 6, cost: 12 },
+    { max: 7, cost: 13 },
+    { max: 8, cost: 13.5 },
+    { max: 10, cost: 14 },
+    { max: 11, cost: 18 },
+    { max: 12, cost: 19 },
+    { max: 13, cost: 21.5 },
+    { max: 14, cost: 21.5 },
+    { max: 15, cost: 21.5 },
+    { max: 16, cost: 23.5 },
+    { max: 17, cost: 23.5 },
+    { max: 18, cost: 23.5 },
+    { max: 19, cost: 23.5 },
   ];
 
-  const base = ranges.find(r => distanceKm <= r.max)?.cost;
-  if (!base) return null;
+  const distanceEntry = distanceRanges.find(r => distanceKm <= r.max);
+  if (!distanceEntry) return null;
 
-  let timeMultiplier = 1;
-  if (/(21:30|22:00|22:30|23:00|23:30|00:00|00:30|01:00|01:30|02:00)/.test(timeLabel)) {
-    timeMultiplier = 1.2;
+  let baseCost = distanceEntry.cost;
+
+  const timeCorrections = [
+    { start: "00:00", end: "07:00", multiplier: 0.9 },
+    { start: "07:00", end: "08:00", multiplier: 0.95 },
+    { start: "08:00", end: "11:00", multiplier: 1.10 },
+    { start: "11:00", end: "15:00", multiplier: 1.00 },
+    { start: "15:00", end: "16:30", multiplier: 1.10 },
+    { start: "16:30", end: "19:30", multiplier: 1.25 },
+    { start: "19:30", end: "23:00", multiplier: 1.00 },
+    { start: "23:00", end: "24:00", multiplier: 0.9 },
+  ];
+
+  function timeToMinutes(t) {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
   }
 
-  if (cart > 500 && cart <= 800) {
-    return 3 * (base * timeMultiplier) + 15;
-  } else if (cart > 250 && cart <= 500) {
-    return 2 * (base * timeMultiplier) + 15;
-  } else if (cart > 150 && cart <= 250) {
-    return (base * timeMultiplier) + 10;
-  } else if (cart > 100 && cart <= 150) {
-    return (base * timeMultiplier) + 5;
-  } else if (cart > 70 && cart <= 100) {
-    return (base * timeMultiplier) + 3;
-  } else {
-    return base * timeMultiplier;
+  const match = timeLabel.match(/(\d{2}:\d{2})\s*[-–]\s*(\d{2}:\d{2})/);
+  if (!match) {
+    console.warn("Не могу распарсить время доставки:", timeLabel);
+    return null;
   }
+  const deliveryTime = timeToMinutes(match[1]);
+
+  const timeEntry = timeCorrections.find(tc => {
+    return deliveryTime >= timeToMinutes(tc.start) && deliveryTime < timeToMinutes(tc.end);
+  });
+
+  const timeMultiplier = timeEntry ? timeEntry.multiplier : 1;
+
+  baseCost = baseCost * timeMultiplier;
+
+  if (cartValue <= 70) {
+    baseCost += 0;
+  } else if (cartValue <= 100) {
+    baseCost += 3;
+  } else if (cartValue <= 150) {
+    baseCost += 5;
+  } else if (cartValue <= 250) {
+    baseCost += 10;
+  } else if (cartValue <= 500) {
+    baseCost = baseCost * 2 + 15;
+  } else if (cartValue <= 800) {
+    baseCost = baseCost * 3 + 15;
+  } else if (cartValue <= 1500) {
+    baseCost = baseCost * 4 + 20;
+  }
+
+  return Math.round(baseCost * 100) / 100;
 }
-
 app.post("/render", async (req, res) => {
   const { lat, lon, time, cart } = req.body;
   const start = { lat: 41.776127, lon: 44.753418 }; // Магазин
