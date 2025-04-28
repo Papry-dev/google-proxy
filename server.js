@@ -89,7 +89,7 @@ function calculateDeliveryCost(distanceKm, cartValue, timeLabel) {
   } else if (cartValue <= 150) {
     baseCost += 5;
   } else if (cartValue <= 250) {
-    baseCost += 10;
+    baseCost += 6;
   } else if (cartValue <= 500) {
     baseCost = baseCost * 2 + 15;
   } else if (cartValue <= 800) {
